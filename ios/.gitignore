@@ -1,0 +1,17 @@
+*.mode1v3
+*.mode2v3
+*.moved-aside
+*.pbxuser
+*.perspectivev3
+**/*sync/
+.sconsign.dblite
+.tags*
+**/.vagrant/
+**/DerivedData/
+.idea/
+**/Pods/
+**/podfile.lock
+**/Podfile.lock
+**/GeneratedPluginRegistrant.h
+**/GeneratedPluginRegistrant.m
+.DS_Store

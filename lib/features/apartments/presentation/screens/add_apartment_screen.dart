@@ -1,0 +1,493 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:sakani/core/config/constants.dart';
+import 'package:sakani/core/config/theme.dart';
+import 'package:sakani/features/apartments/data/models/apartment_model.dart';
+import 'package:sakani/features/apartments/presentation/providers/apartment_provider.dart';
+import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
+import 'package:sakani/core/widgets/gradient_button.dart';
+import 'package:sakani/core/widgets/section_header.dart';
+import 'package:sakani/core/widgets/app_snackbar.dart';
+import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
+
+class AddApartmentScreen extends StatefulWidget {
+  const AddApartmentScreen({super.key});
+
+  @override
+  State<AddApartmentScreen> createState() => _AddApartmentScreenState();
+}
+
+class _AddApartmentScreenState extends State<AddApartmentScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleCtl = TextEditingController();
+  final _descCtl = TextEditingController();
+  final _cityCtl = TextEditingController();
+  final _addressCtl = TextEditingController();
+  final _dailyPriceCtl = TextEditingController();
+  final _monthlyPriceCtl = TextEditingController();
+  final _yearlyPriceCtl = TextEditingController();
+  final _depositCtl = TextEditingController();
+  final _phoneCtl = TextEditingController();
+
+  int _bedrooms = 1, _bathrooms = 1, _maxGuests = 2;
+  double _area = 100;
+  final List<String> _selectedAmenities = [];
+  final List<String> _availableRentTypes = ['شهري'];
+
+  final ImagePicker _picker = ImagePicker();
+  final List<XFile> _images = [];
+
+  Future<void> _pickImages() async {
+    final List<XFile> picked = await _picker.pickMultiImage();
+    if (picked.isNotEmpty) {
+      setState(() => _images.addAll(picked));
+    }
+  }
+
+  void _removeImage(int index) {
+    setState(() => _images.removeAt(index));
+  }
+
+  @override
+  void dispose() {
+    _titleCtl.dispose();
+    _descCtl.dispose();
+    _cityCtl.dispose();
+    _addressCtl.dispose();
+    _dailyPriceCtl.dispose();
+    _monthlyPriceCtl.dispose();
+    _yearlyPriceCtl.dispose();
+    _depositCtl.dispose();
+    _phoneCtl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_images.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يجب إضافة 3 صور على الأقل للشقة')),
+      );
+      return;
+    }
+    if (_availableRentTypes.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يجب اختيار نوع إيجار واحد على الأقل')),
+      );
+      return;
+    }
+    final user = context.read<AuthProvider>().user;
+    if (user == null) return;
+    final aptProv = context.read<ApartmentProvider>();
+    final apartment = Apartment(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      ownerId: user.uid,
+      ownerName: user.name,
+      title: _titleCtl.text.trim(),
+      description: _descCtl.text.trim(),
+      city: _cityCtl.text.trim(),
+      address: _addressCtl.text.trim(),
+      bedrooms: _bedrooms,
+      bathrooms: _bathrooms,
+      area: _area,
+      amenities: _selectedAmenities,
+      images: _images.map((e) => e.path).toList(),
+      availableRentTypes: _availableRentTypes,
+      dailyPrice: _availableRentTypes.contains('يومي')
+          ? (double.tryParse(_dailyPriceCtl.text) ?? 0)
+          : 0,
+      monthlyPrice: _availableRentTypes.contains('شهري')
+          ? (double.tryParse(_monthlyPriceCtl.text) ?? 0)
+          : 0,
+      yearlyPrice: _availableRentTypes.contains('سنوي')
+          ? (double.tryParse(_yearlyPriceCtl.text) ?? 0)
+          : 0,
+      securityDeposit: double.tryParse(_depositCtl.text) ?? 0,
+      contactPhone: _phoneCtl.text.trim(),
+      maxGuests: _maxGuests,
+    );
+    await aptProv.addApartment(apartment);
+    if (!mounted) return;
+    try {
+      context.read<ApartmentCubit>().loadApartments();
+      context.read<ApartmentCubit>().loadOwnerApartments(user.uid);
+    } catch (_) {}
+    AppSnackbar.show(
+      context,
+      message: 'تم إضافة الشقة بنجاح',
+      type: ToastType.success,
+    );
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('إضافة شقة جديدة')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Apartment Info ──
+              const SectionHeader(title: 'معلومات الشقة'),
+              const SizedBox(height: 4),
+              TextFormField(
+                controller: _titleCtl,
+                decoration: const InputDecoration(labelText: 'عنوان الشقة'),
+                validator: (v) =>
+                    v != null && v.isNotEmpty ? null : 'العنوان مطلوب',
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _descCtl,
+                decoration: const InputDecoration(labelText: 'الوصف'),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _cityCtl,
+                decoration: const InputDecoration(
+                  labelText: 'المدينة / المحافظة',
+                  hintText: 'مثال: القاهرة، الجيزة، الإسكندرية، الرياض...',
+                  prefixIcon: Icon(Icons.location_city_rounded),
+                ),
+                validator: (v) =>
+                    v != null && v.trim().isNotEmpty ? null : 'يرجى كتابة اسم المدينة',
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _addressCtl,
+                decoration: const InputDecoration(
+                  labelText: 'العنوان التفصيلي / الحي والشارع',
+                  prefixIcon: Icon(Icons.place_outlined),
+                ),
+                validator: (v) =>
+                    v != null && v.trim().isNotEmpty ? null : 'العنوان التفصيلي مطلوب',
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _phoneCtl,
+                decoration: const InputDecoration(
+                  labelText: 'رقم الجوال للتواصل',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 28),
+
+              // ── Details ──
+              const SectionHeader(title: 'التفاصيل'),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Expanded(
+                    child: _Counter(
+                      label: 'غرف النوم',
+                      value: _bedrooms,
+                      onChanged: (v) => setState(() => _bedrooms = v),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _Counter(
+                      label: 'الحمامات',
+                      value: _bathrooms,
+                      onChanged: (v) => setState(() => _bathrooms = v),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _Counter(
+                      label: 'أقصى ضيوف',
+                      value: _maxGuests,
+                      onChanged: (v) => setState(() => _maxGuests = v),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'المساحة (م²)',
+                      ),
+                      keyboardType: TextInputType.number,
+                      initialValue: '100',
+                      onChanged: (v) => _area = double.tryParse(v) ?? 0,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+
+              // ── Images ──
+              const SectionHeader(title: 'صور الشقة (3 صور على الأقل)'),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ..._images.asMap().entries.map((e) {
+                    return Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: AppRadius.smBr,
+                          child: Image.file(
+                            File(e.value.path),
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: InkWell(
+                            onTap: () => _removeImage(e.key),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(
+                                color: Colors.black54,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close_rounded,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                  InkWell(
+                    onTap: _pickImages,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: context.cardColor,
+                        borderRadius: AppRadius.smBr,
+                        border: Border.all(
+                          color: context.borderColor,
+                          style: BorderStyle.solid,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.add_a_photo_rounded,
+                        color: context.textSecondary,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 28),
+
+              // ── Rent Types & Prices ──
+              const SectionHeader(title: 'نوع الإيجار والأسعار'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 12,
+                children: ['يومي', 'شهري', 'سنوي'].map((type) {
+                  final selected = _availableRentTypes.contains(type);
+                  return FilterChip(
+                    label: Text(type),
+                    selected: selected,
+                    selectedColor: context.accentColor.withValues(alpha: 0.2),
+                    checkmarkColor: context.accentColor,
+                    onSelected: (v) {
+                      setState(() {
+                        if (v) {
+                          _availableRentTypes.add(type);
+                        } else {
+                          _availableRentTypes.remove(type);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 16),
+              if (_availableRentTypes.contains('يومي')) ...[
+                TextFormField(
+                  controller: _dailyPriceCtl,
+                  decoration: const InputDecoration(labelText: 'السعر اليومي'),
+                  keyboardType: TextInputType.number,
+                  validator: (v) =>
+                      v != null && v.isNotEmpty ? null : 'السعر اليومي مطلوب',
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (_availableRentTypes.contains('شهري')) ...[
+                TextFormField(
+                  controller: _monthlyPriceCtl,
+                  decoration: const InputDecoration(labelText: 'السعر الشهري'),
+                  keyboardType: TextInputType.number,
+                  validator: (v) =>
+                      v != null && v.isNotEmpty ? null : 'السعر الشهري مطلوب',
+                ),
+                const SizedBox(height: 12),
+              ],
+              if (_availableRentTypes.contains('سنوي')) ...[
+                TextFormField(
+                  controller: _yearlyPriceCtl,
+                  decoration: const InputDecoration(labelText: 'السعر السنوي'),
+                  keyboardType: TextInputType.number,
+                  validator: (v) =>
+                      v != null && v.isNotEmpty ? null : 'السعر السنوي مطلوب',
+                ),
+                const SizedBox(height: 12),
+              ],
+              TextFormField(
+                controller: _depositCtl,
+                decoration: const InputDecoration(labelText: 'التأمين '),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 28),
+
+              // ── Amenities ──
+              const SectionHeader(title: 'الخدمات والمرافق'),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: AppConstants.amenities.map((a) {
+                  final selected = _selectedAmenities.contains(a);
+                  return FilterChip(
+                    label: Text(a),
+                    selected: selected,
+                    selectedColor: context.accentColor.withValues(alpha: 0.2),
+                    checkmarkColor: context.accentColor,
+                    backgroundColor: context.cardColor,
+                    labelStyle: TextStyle(
+                      color: selected
+                          ? context.accentColor
+                          : context.textSecondary,
+                      fontWeight: selected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: AppRadius.pillBr,
+                      side: BorderSide(
+                        color: selected
+                            ? context.accentColor.withValues(alpha: 0.3)
+                            : context.borderColor,
+                      ),
+                    ),
+                    onSelected: (v) {
+                      setState(() {
+                        if (v) {
+                          _selectedAmenities.add(a);
+                        } else {
+                          _selectedAmenities.remove(a);
+                        }
+                      });
+                    },
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 36),
+
+              // ── Submit Button ──
+              Consumer<ApartmentProvider>(
+                builder: (context, prov, _) => GradientButton(
+                  text: 'إضافة الشقة',
+                  isLoading: prov.isLoading,
+                  onPressed: prov.isLoading ? null : _submit,
+                  icon: Icons.add_home_rounded,
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Counter extends StatelessWidget {
+  final String label;
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  const _Counter({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: context.cardColor,
+        borderRadius: AppRadius.mdBr,
+        border: Border.all(color: context.borderColor),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(color: context.textSecondary, fontSize: 11),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$value',
+                  style: TextStyle(
+                    color: context.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            children: [
+              InkWell(
+                onTap: () => onChanged(value + 1),
+                borderRadius: AppRadius.xsBr,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Icon(
+                    Icons.add_rounded,
+                    color: context.accentColor,
+                    size: 20,
+                  ),
+                ),
+              ),
+              InkWell(
+                onTap: () => onChanged(value > 1 ? value - 1 : 1),
+                borderRadius: AppRadius.xsBr,
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: Icon(
+                    Icons.remove_rounded,
+                    color: context.textSecondary,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
