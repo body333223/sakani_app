@@ -7,19 +7,7 @@ workflows:
       flutter: stable
       xcode: latest
       cocoapods: default
-      groups:
-        # Optional: Add your Codemagic environment variables group for Apple Developer credentials
-        # - apple_credentials
     scripts:
-      - name: Set up code signing (if certificates are provided)
-        script: |
-          # If you set up App Store Connect API keys or manual certificates in Codemagic UI:
-          # keychain initialize
-          # app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_DEVELOPMENT --create
-          # keychain add-certificates
-          # xcode-project use-profiles
-          echo "Ready for iOS build"
-
       - name: Get Flutter packages
         script: |
           flutter packages pub get
@@ -30,13 +18,9 @@ workflows:
 
       - name: Build iOS IPA
         script: |
-          # If code signing is set up in Codemagic UI, use:
-          # flutter build ipa --release
-          #
-          # For building release IPA without signing credentials on Codemagic:
           flutter build ipa --release --no-codesign
 
-      - name: Package Unsigned IPA (if not codesigned)
+      - name: Package Unsigned IPA
         script: |
           mkdir -p build/ios/ipa
           if [ -d "build/ios/archive/Runner.xcarchive" ]; then
