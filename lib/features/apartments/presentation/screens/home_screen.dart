@@ -12,6 +12,9 @@ import 'package:sakani/features/apartments/presentation/widgets/featured_carouse
 import 'package:sakani/features/apartments/presentation/widgets/city_filter_bar.dart';
 import 'package:sakani/features/apartments/presentation/widgets/filter_bottom_sheet.dart';
 import 'package:sakani/features/apartments/presentation/widgets/quick_sort_bar.dart';
+import 'package:sakani/core/widgets/luxury_nav_bar.dart';
+import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dart';
+import 'package:sakani/features/apartments/presentation/screens/wishlist_screen.dart';
 import 'package:sakani/features/bookings/presentation/screens/my_bookings_screen.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
@@ -48,6 +51,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
 
     final List<Widget> pages = [
       _buildExploreTab(tr),
+      WishlistScreen(onExplore: () => setState(() => _currentIndex = 0)),
       const MyBookingsScreen(isEmbedded: true),
       const ChatListScreen(isEmbedded: true),
       const SettingsScreen(isEmbedded: true),
@@ -55,12 +59,14 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
 
     final List<String> titles = [
       tr.tr('appName'),
+      tr.tr('wishlist'),
       tr.tr('myBookings'),
       tr.tr('chats'),
-      tr.tr('settings'),
+      tr.tr('myAccount'),
     ];
 
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(
@@ -78,7 +84,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                     Icons.chat_bubble_outline_rounded,
                     color: context.accentColor,
                   ),
-                  onPressed: () => setState(() => _currentIndex = 2),
+                  onPressed: () => setState(() => _currentIndex = 3),
                 ),
               ]
             : null,
@@ -246,7 +252,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                               ],
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 96),
                               itemCount: filtered.length + (_searchQuery.isEmpty && allApartments.length > 1 ? 2 : 0),
                               itemBuilder: (context, index) {
                                 final showFeatured = _searchQuery.isEmpty && allApartments.length > 1;
@@ -310,42 +316,39 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
   }
 
   Widget _buildBottomNav(AppLocalizations tr) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.surfaceColor,
-        border: Border(top: BorderSide(color: context.borderColor, width: 0.8)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: context.accentColor,
-        unselectedItemColor: context.textSecondary,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.explore_outlined),
-            activeIcon: const Icon(Icons.explore_rounded),
-            label: tr.tr('appName'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.bookmark_border_rounded),
-            activeIcon: const Icon(Icons.bookmark_rounded),
-            label: tr.tr('myBookings'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.chat_bubble_outline_rounded),
-            activeIcon: const Icon(Icons.chat_bubble_rounded),
-            label: tr.tr('chats'),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.settings_outlined),
-            activeIcon: const Icon(Icons.settings_rounded),
-            label: tr.tr('settings'),
-          ),
-        ],
-      ),
+    final wishlistCount = context.watch<WishlistCubit>().state.length;
+
+    return LuxuryNavBar(
+      currentIndex: _currentIndex,
+      onTap: (index) => setState(() => _currentIndex = index),
+      items: [
+        LuxuryNavItem(
+          selectedIcon: Icons.explore_rounded,
+          unselectedIcon: Icons.explore_outlined,
+          label: tr.tr('explore'),
+        ),
+        LuxuryNavItem(
+          selectedIcon: Icons.favorite_rounded,
+          unselectedIcon: Icons.favorite_border_rounded,
+          label: tr.tr('wishlist'),
+          badgeCount: wishlistCount > 0 ? wishlistCount : null,
+        ),
+        LuxuryNavItem(
+          selectedIcon: Icons.calendar_month_rounded,
+          unselectedIcon: Icons.calendar_month_outlined,
+          label: tr.tr('myBookings'),
+        ),
+        LuxuryNavItem(
+          selectedIcon: Icons.chat_bubble_rounded,
+          unselectedIcon: Icons.chat_bubble_outline_rounded,
+          label: tr.tr('chats'),
+        ),
+        LuxuryNavItem(
+          selectedIcon: Icons.person_rounded,
+          unselectedIcon: Icons.person_outline_rounded,
+          label: tr.tr('myAccount'),
+        ),
+      ],
     );
   }
 }

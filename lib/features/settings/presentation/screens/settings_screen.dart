@@ -5,7 +5,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
+import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
+import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_state.dart';
 import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
+import 'package:sakani/features/bookings/presentation/providers/booking_provider.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/features/settings/presentation/providers/theme_provider.dart';
 import 'package:sakani/core/widgets/glass_card.dart';
@@ -19,10 +24,12 @@ class SettingsScreen extends StatelessWidget {
     final lang = context.watch<LocaleProvider>().lang;
     final tr = AppLocalizations(lang);
     final auth = context.watch<AuthProvider>();
-    final user = auth.user;
+    final authCubit = context.watch<AuthCubit>();
+    final authState = authCubit.state;
+    final user = auth.user ?? (authState is Authenticated ? authState.user : authCubit.currentUser);
 
     final body = SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 20, bottom: 96),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -570,8 +577,99 @@ class _HeroProfileCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          Consumer3<WishlistCubit, BookingProvider, ApartmentCubit>(
+            builder: (context, wishlist, bookingProv, aptCubit, _) {
+              final wishlistCount = wishlist.state.length;
+              final bookingsCount = isOwner
+                  ? bookingProv.ownerBookings.length
+                  : bookingProv.tenantBookings.length;
+              final aptsCount = aptCubit.state.ownerApartments.length;
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: context.isDark
+                      ? Colors.white.withValues(alpha: 0.04)
+                      : Colors.black.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: context.isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : Colors.black.withValues(alpha: 0.06),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildStatItem(
+                      context,
+                      title: isOwner ? 'عقاراتي' : 'المفضلة',
+                      value: isOwner ? '$aptsCount' : '$wishlistCount',
+                      icon: isOwner ? Icons.apartment_rounded : Icons.favorite_rounded,
+                      color: isOwner ? context.accentColor : Colors.redAccent,
+                    ),
+                    Container(width: 1, height: 26, color: context.borderColor),
+                    _buildStatItem(
+                      context,
+                      title: 'الحجوزات',
+                      value: '$bookingsCount',
+                      icon: Icons.calendar_month_rounded,
+                      color: Colors.blueAccent,
+                    ),
+                    Container(width: 1, height: 26, color: context.borderColor),
+                    _buildStatItem(
+                      context,
+                      title: isOwner ? 'التقييم' : 'الحالة',
+                      value: isOwner ? '4.9 ★' : 'موثق ✓',
+                      icon: isOwner ? Icons.star_rounded : Icons.verified_user_rounded,
+                      color: isOwner ? Colors.amber : Colors.greenAccent,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStatItem(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 4),
+            Text(
+              value,
+              style: TextStyle(
+                color: context.textPrimary,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          title,
+          style: TextStyle(
+            color: context.textSecondary,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }

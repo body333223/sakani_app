@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
+import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dart';
 
 class ApartmentCard extends StatefulWidget {
   final Apartment apartment;
@@ -18,7 +20,6 @@ class ApartmentCard extends StatefulWidget {
 
 class _ApartmentCardState extends State<ApartmentCard>
     with SingleTickerProviderStateMixin {
-  bool _isFavorite = false;
   late final AnimationController _heartController;
   late final Animation<double> _heartScale;
 
@@ -42,13 +43,14 @@ class _ApartmentCardState extends State<ApartmentCard>
   }
 
   void _toggleFavorite() {
-    setState(() => _isFavorite = !_isFavorite);
+    context.read<WishlistCubit>().toggleFavorite(widget.apartment.id);
     _heartController.forward(from: 0.0);
   }
 
   @override
   Widget build(BuildContext context) {
     final apt = widget.apartment;
+    final isFavorite = context.watch<WishlistCubit>().isFavorite(apt.id);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
@@ -178,8 +180,8 @@ class _ApartmentCardState extends State<ApartmentCard>
                               ),
                             ),
                             child: Icon(
-                              _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                              color: _isFavorite ? const Color(0xFFEF4444) : Colors.white,
+                              isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              color: isFavorite ? const Color(0xFFEF4444) : Colors.white,
                               size: 19,
                             ),
                           ),

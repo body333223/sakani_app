@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/widgets/empty_state.dart';
 import 'package:sakani/core/widgets/section_header.dart';
+import 'package:sakani/core/widgets/luxury_nav_bar.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_state.dart';
@@ -51,6 +52,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     ];
 
     return Scaffold(
+      extendBody: true,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(
@@ -108,7 +110,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 }
               },
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.only(top: 16, bottom: 96),
                 children: [
                   OwnerStatsOverview(
                     totalProperties: total,
@@ -216,7 +218,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   ],
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
                   itemCount: apartments.length,
                   itemBuilder: (context, index) {
                     final apt = apartments[index];
@@ -334,7 +336,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         ],
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 96),
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final b = filtered[index];
@@ -354,27 +356,40 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   }
 
   Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.surfaceColor,
-        border: Border(top: BorderSide(color: context.borderColor, width: 0.8)),
-      ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: context.accentColor,
-        unselectedItemColor: context.textSecondary,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard_rounded), label: 'الرئيسية'),
-          BottomNavigationBarItem(icon: Icon(Icons.holiday_village_outlined), activeIcon: Icon(Icons.holiday_village_rounded), label: 'عقاراتي'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark_outline_rounded), activeIcon: Icon(Icons.bookmark_rounded), label: 'الحجوزات'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline_rounded), activeIcon: Icon(Icons.chat_bubble_rounded), label: 'المحادثات'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings_outlined), activeIcon: Icon(Icons.settings_rounded), label: 'الإعدادات'),
-        ],
-      ),
+    final bookings = context.watch<BookingProvider>().ownerBookings;
+    final pendingCount = bookings.where((b) => b.status == 'قيد الانتظار').length;
+
+    return LuxuryNavBar(
+      currentIndex: _currentIndex,
+      onTap: (index) => setState(() => _currentIndex = index),
+      items: [
+        const LuxuryNavItem(
+          selectedIcon: Icons.dashboard_rounded,
+          unselectedIcon: Icons.dashboard_outlined,
+          label: 'الرئيسية',
+        ),
+        const LuxuryNavItem(
+          selectedIcon: Icons.apartment_rounded,
+          unselectedIcon: Icons.apartment_outlined,
+          label: 'عقاراتي',
+        ),
+        LuxuryNavItem(
+          selectedIcon: Icons.calendar_month_rounded,
+          unselectedIcon: Icons.calendar_month_outlined,
+          label: 'الحجوزات',
+          badgeCount: pendingCount > 0 ? pendingCount : null,
+        ),
+        const LuxuryNavItem(
+          selectedIcon: Icons.chat_bubble_rounded,
+          unselectedIcon: Icons.chat_bubble_outline_rounded,
+          label: 'المحادثات',
+        ),
+        const LuxuryNavItem(
+          selectedIcon: Icons.person_rounded,
+          unselectedIcon: Icons.person_outline_rounded,
+          label: 'حسابي',
+        ),
+      ],
     );
   }
 }

@@ -27,6 +27,7 @@ import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:sakani/features/auth/presentation/cubit/auth_state.dart';
 import 'package:sakani/features/splash/presentation/screens/splash_screen.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
+import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dart';
 import 'package:sakani/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:sakani/features/chat/presentation/cubit/chat_cubit.dart';
 import 'package:sakani/features/auth/data/services/auth_service.dart';
@@ -49,6 +50,7 @@ class SakaniApp extends StatelessWidget {
         BlocProvider<ApartmentCubit>(create: (_) => sl<ApartmentCubit>()),
         BlocProvider<BookingCubit>(create: (_) => sl<BookingCubit>()),
         BlocProvider<ChatCubit>(create: (_) => sl<ChatCubit>()),
+        BlocProvider<WishlistCubit>(create: (_) => WishlistCubit()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
