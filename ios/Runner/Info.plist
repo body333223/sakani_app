@@ -49,5 +49,14 @@
 	<string>يحتاج تطبيق سكني إلى إذن الكاميرا لالتقاط صور الشقق أو البروفايل.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>يحتاج تطبيق سكني إلى إذن الوصول لمعرض الصور لاختيار صور الشقق أو البروفايل.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>يحتاج التطبيق للاتصال بالخادم المحلي للتطبيق.</string>
 </dict>
 </plist>

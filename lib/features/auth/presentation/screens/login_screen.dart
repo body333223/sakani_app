@@ -40,11 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
   }
 
-  void _fillDemo(String email, String pass) {
-    _emailCtl.text = email;
-    _passwordCtl.text = pass;
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LocaleProvider>().lang;
@@ -149,11 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      // Demo Quick Fill Chips
-                      _buildDemoChips(context),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
                       // Register Link
                       Row(
@@ -217,26 +208,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDemoChips(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 10,
-      runSpacing: 8,
-      children: [
-        ActionChip(
-          label: const Text('تجربة مستأجر (Demo Tenant)'),
-          avatar: const Icon(Icons.person_rounded, size: 16),
-          onPressed: () => _fillDemo('tenant@sakani.com', '123456'),
-        ),
-        ActionChip(
-          label: const Text('تجربة مالك (Demo Owner)'),
-          avatar: const Icon(Icons.domain_rounded, size: 16),
-          onPressed: () => _fillDemo('owner@sakani.com', '123456'),
-        ),
-      ],
     );
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import '../security/secure_storage_service.dart';
 
 /// تكوين نقاط الوصول (API Configuration) مع تشفير التوكنات
@@ -30,27 +28,16 @@ class ApiConfig {
     }
   }
 
+  /// رابط الخادم الرسمي المباشر عبر الإنترنت (HTTPS)
+  static const String liveServerUrl = 'https://railroad-infrastructure-sunshine-sheep.trycloudflare.com/api';
+
   /// رابط الخادم الأساسي
   static String get baseUrl {
     final custom = customBaseUrl;
     if (custom != null && custom.isNotEmpty) {
       return custom;
     }
-    if (kIsWeb) {
-      return 'http://localhost:5093/api';
-    }
-    try {
-      if (Platform.isAndroid) {
-        return 'http://10.0.2.2:5093/api';
-      }
-      if (Platform.isIOS) {
-        // في حالة جهاز آيفون حقيقي متصل بنفس شبكة Wi-Fi
-        return 'http://192.168.1.24:5093/api';
-      }
-    } catch (_) {
-      // Fallback for web or desktop
-    }
-    return 'http://localhost:5093/api';
+    return liveServerUrl;
   }
 
   /// ترويسات الطلب مع التوكن المشفر
