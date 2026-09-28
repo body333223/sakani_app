@@ -12,9 +12,10 @@ workflows:
         script: |
           flutter packages pub get
 
-      - name: Install CocoaPods dependencies
+      - name: Clean stale configs & precache iOS
         script: |
-          cd ios && pod install
+          rm -f ios/Flutter/Generated.xcconfig
+          flutter precache --ios
 
       - name: Build iOS IPA
         script: |
