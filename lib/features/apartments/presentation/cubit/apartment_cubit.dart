@@ -8,6 +8,7 @@ import 'package:sakani/features/apartments/domain/usecases/get_apartments_usecas
 import 'package:sakani/features/apartments/domain/usecases/get_owner_apartments_usecase.dart';
 import 'package:sakani/features/apartments/domain/usecases/update_apartment_usecase.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_state.dart';
+import 'package:sakani/features/apartments/presentation/models/apartment_filter_options.dart';
 
 class ApartmentCubit extends Cubit<ApartmentState> {
   final GetApartmentsUseCase getApartmentsUseCase;
@@ -44,6 +45,23 @@ class ApartmentCubit extends Cubit<ApartmentState> {
 
   void setFilter({String? city, double? maxPrice}) {
     loadApartments(city: city, maxPrice: maxPrice);
+  }
+
+  void applyFilters(ApartmentFilterOptions filters) {
+    emit(state.copyWith(filterOptions: filters));
+  }
+
+  void setSortBy(String sortBy) {
+    emit(state.copyWith(
+      filterOptions: state.filterOptions.copyWith(sortBy: sortBy),
+    ));
+  }
+
+  void resetFilters() {
+    emit(state.copyWith(
+      filterOptions: const ApartmentFilterOptions(),
+      selectedCity: null,
+    ));
   }
 
   void loadOwnerApartments(String ownerId) {

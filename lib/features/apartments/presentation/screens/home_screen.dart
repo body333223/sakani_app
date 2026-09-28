@@ -8,7 +8,10 @@ import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_state.dart';
 import 'package:sakani/features/apartments/presentation/widgets/apartment_card.dart';
+import 'package:sakani/features/apartments/presentation/widgets/featured_carousel.dart';
 import 'package:sakani/features/apartments/presentation/widgets/city_filter_bar.dart';
+import 'package:sakani/features/apartments/presentation/widgets/filter_bottom_sheet.dart';
+import 'package:sakani/features/apartments/presentation/widgets/quick_sort_bar.dart';
 import 'package:sakani/features/bookings/presentation/screens/my_bookings_screen.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
@@ -91,7 +94,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
         final allApartments = state.apartments;
         final cities = allApartments.map((a) => a.city).toSet().toList();
 
-        final filtered = allApartments.where((apt) {
+        final filtered = state.filteredApartments.where((apt) {
           if (_searchQuery.isEmpty) return true;
           final q = _searchQuery.toLowerCase();
           return apt.title.toLowerCase().contains(q) ||
@@ -101,41 +104,98 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
 
         return Column(
           children: [
-            // Search Input
+            // Search Input Row with Filter Button
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.cardColor,
-                  borderRadius: AppRadius.mdBr,
-                  border: Border.all(color: context.borderColor),
-                  boxShadow: AppShadows.card(context),
-                ),
-                child: TextField(
-                  controller: _searchCtl,
-                  onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                  decoration: InputDecoration(
-                    hintText: 'ابحث عن مدينة، حي، أو مواصفات...',
-                    hintStyle: TextStyle(
-                      color: context.textSecondary.withValues(alpha: 0.6),
-                      fontSize: 14,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: context.cardColor,
+                        borderRadius: AppRadius.mdBr,
+                        border: Border.all(color: context.borderColor),
+                        boxShadow: AppShadows.card(context),
+                      ),
+                      child: TextField(
+                        controller: _searchCtl,
+                        onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                        decoration: InputDecoration(
+                          hintText: 'ابحث عن مدينة، حي، أو مواصفات...',
+                          hintStyle: TextStyle(
+                            color: context.textSecondary.withValues(alpha: 0.6),
+                            fontSize: 14,
+                          ),
+                          prefixIcon: Icon(Icons.search_rounded, color: context.accentColor),
+                          suffixIcon: _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear_rounded, size: 20),
+                                  onPressed: () {
+                                    _searchCtl.clear();
+                                    setState(() => _searchQuery = '');
+                                  },
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        ),
+                      ),
                     ),
-                    prefixIcon: Icon(Icons.search_rounded, color: context.accentColor),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded, size: 20),
-                            onPressed: () {
-                              _searchCtl.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  // Filter Button with Badge
+                  GestureDetector(
+                    onTap: () => FilterBottomSheet.show(
+                      context: context,
+                      initialOptions: state.filterOptions,
+                      onApply: (opts) => context.read<ApartmentCubit>().applyFilters(opts),
+                      onReset: () => context.read<ApartmentCubit>().resetFilters(),
+                      matchingCount: state.filteredApartments.length,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: state.filterOptions.hasActiveFilters
+                            ? context.accentColor
+                            : context.cardColor,
+                        borderRadius: AppRadius.mdBr,
+                        border: Border.all(
+                          color: state.filterOptions.hasActiveFilters
+                              ? context.accentColor
+                              : context.borderColor,
+                        ),
+                        boxShadow: AppShadows.card(context),
+                      ),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Icon(
+                            Icons.tune_rounded,
+                            color: state.filterOptions.hasActiveFilters
+                                ? Colors.black
+                                : context.accentColor,
+                            size: 22,
+                          ),
+                          if (state.filterOptions.hasActiveFilters)
+                            Positioned(
+                              top: -6,
+                              right: -6,
+                              child: CircleAvatar(
+                                radius: 8,
+                                backgroundColor: AppColors.error,
+                                child: Text(
+                                  '${state.filterOptions.activeFiltersCount}',
+                                  style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -147,6 +207,13 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                     city: city,
                     maxPrice: state.maxPrice,
                   ),
+            ),
+            const SizedBox(height: 8),
+
+            // Quick Sorting Pills
+            QuickSortBar(
+              selectedSort: state.filterOptions.sortBy,
+              onSortChanged: (sort) => context.read<ApartmentCubit>().setSortBy(sort),
             ),
             const SizedBox(height: 8),
 
@@ -173,16 +240,54 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                   icon: Icons.holiday_village_outlined,
                                   title: tr.tr('noApartments'),
                                   subtitle: _searchQuery.isNotEmpty
-                                      ? 'جرب البحث بكلمات مختلفة أو مدينة أخرى'
-                                      : 'سيتم عرض الشقق هنا فور إضافتها',
+                                      ? 'جرب البحث بكلمات مختلفة أو تعديل خيارات الفلتر'
+                                      : 'لا توجد شقق مطابقة للبحث أو الفلتر المحدد',
                                 ),
                               ],
                             )
                           : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: filtered.length,
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              itemCount: filtered.length + (_searchQuery.isEmpty && allApartments.length > 1 ? 2 : 0),
                               itemBuilder: (context, index) {
-                                final aptEntity = filtered[index];
+                                final showFeatured = _searchQuery.isEmpty && allApartments.length > 1;
+
+                                if (showFeatured && index == 0) {
+                                  final featuredList = allApartments.map((e) => e is ApartmentModel ? e : ApartmentModel.fromEntity(e)).toList();
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: FeaturedCarousel(apartments: featuredList),
+                                  );
+                                }
+
+                                if (showFeatured && index == 1) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'جميع الشقق المتاحة',
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w800,
+                                            color: context.textPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${filtered.length} شقة',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: context.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+
+                                final actualIndex = showFeatured ? index - 2 : index;
+                                final aptEntity = filtered[actualIndex];
                                 final aptModel = aptEntity is ApartmentModel
                                     ? aptEntity
                                     : ApartmentModel.fromEntity(aptEntity);

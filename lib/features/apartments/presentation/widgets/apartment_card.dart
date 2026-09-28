@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 
-class ApartmentCard extends StatelessWidget {
+class ApartmentCard extends StatefulWidget {
   final Apartment apartment;
   final VoidCallback onTap;
 
@@ -13,39 +13,82 @@ class ApartmentCard extends StatelessWidget {
   });
 
   @override
+  State<ApartmentCard> createState() => _ApartmentCardState();
+}
+
+class _ApartmentCardState extends State<ApartmentCard>
+    with SingleTickerProviderStateMixin {
+  bool _isFavorite = false;
+  late final AnimationController _heartController;
+  late final Animation<double> _heartScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _heartController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _heartScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.35), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.35, end: 1.0), weight: 50),
+    ]).animate(_heartController);
+  }
+
+  @override
+  void dispose() {
+    _heartController.dispose();
+    super.dispose();
+  }
+
+  void _toggleFavorite() {
+    setState(() => _isFavorite = !_isFavorite);
+    _heartController.forward(from: 0.0);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final apt = widget.apartment;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: onTap,
-          borderRadius: AppRadius.lgBr,
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(24),
           child: Container(
             decoration: BoxDecoration(
-              gradient: AppGradients.card(context),
-              borderRadius: AppRadius.lgBr,
+              color: context.cardColor,
+              borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: context.borderColor.withValues(alpha: 0.6),
+                color: context.borderColor.withValues(alpha: 0.7),
+                width: 1,
               ),
-              boxShadow: AppShadows.card(context),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: context.isDark ? 0.45 : 0.07),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
             clipBehavior: Clip.antiAlias,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Image Section ──
+                // ── Image Section with Badges ──
                 Stack(
                   children: [
                     Hero(
-                      tag: 'apartment_${apartment.id}',
+                      tag: 'apartment_${apt.id}',
                       child: Container(
-                        height: 190,
+                        height: 205,
                         width: double.infinity,
                         color: context.cardColor,
-                        child: apartment.images.isNotEmpty
+                        child: apt.images.isNotEmpty
                             ? Image.network(
-                                apartment.images[0],
+                                apt.images[0],
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, _, _) =>
                                     _ImagePlaceholder(color: context.cardColor),
@@ -53,27 +96,42 @@ class ApartmentCard extends StatelessWidget {
                             : _ImagePlaceholder(color: context.cardColor),
                       ),
                     ),
+
+                    // Top Gradient Shadow
+                    Container(
+                      height: 70,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.5),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+
                     // ── Price Badge ──
                     Positioned(
-                      top: 12,
-                      right: 12,
+                      top: 14,
+                      right: 14,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF080C14).withValues(alpha: 0.85),
+                          color: const Color(0xFF0F172A).withValues(alpha: 0.9),
                           borderRadius: AppRadius.pillBr,
                           border: Border.all(
-                            color: AppColors.gold.withValues(alpha: 0.45),
+                            color: context.accentColor.withValues(alpha: 0.6),
                             width: 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withValues(alpha: 0.35),
                               blurRadius: 8,
-                              offset: const Offset(0, 3),
                             ),
                           ],
                         ),
@@ -81,9 +139,9 @@ class ApartmentCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              '${apartment.monthlyPrice.round()} جنية',
-                              style: const TextStyle(
-                                color: AppColors.gold,
+                              '${apt.monthlyPrice.round()} جنية',
+                              style: TextStyle(
+                                color: context.accentColor,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -100,34 +158,52 @@ class ApartmentCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // ── City Badge ──
+
+                    // ── Wishlist Heart Button ──
                     Positioned(
                       top: 12,
-                      left: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF080C14).withValues(alpha: 0.85),
-                          borderRadius: AppRadius.pillBr,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            width: 1,
+                      left: 14,
+                      child: GestureDetector(
+                        onTap: _toggleFavorite,
+                        child: ScaleTransition(
+                          scale: _heartScale,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25),
+                              ),
+                            ),
+                            child: Icon(
+                              _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              color: _isFavorite ? const Color(0xFFEF4444) : Colors.white,
+                              size: 19,
+                            ),
                           ),
+                        ),
+                      ),
+                    ),
+
+                    // ── City & Rating Badge on bottom of image ──
+                    Positioned(
+                      bottom: 12,
+                      right: 14,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: AppRadius.pillBr,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
-                              Icons.location_on_rounded,
-                              color: AppColors.gold,
-                              size: 13,
-                            ),
+                            Icon(Icons.location_on_rounded, size: 12, color: context.accentColor),
                             const SizedBox(width: 4),
                             Text(
-                              apartment.city,
+                              apt.city,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
@@ -140,62 +216,121 @@ class ApartmentCard extends StatelessWidget {
                     ),
                   ],
                 ),
+
                 // ── Info Section ──
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        apartment.title,
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              apt.title,
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                height: 1.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.star_rounded, size: 16, color: context.accentColor),
+                              const SizedBox(width: 2),
+                              Text(
+                                '4.9',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 10),
+
                       // ── Specs Row ──
                       Row(
                         children: [
                           _SpecChip(
                             icon: Icons.bed_rounded,
-                            value: '${apartment.bedrooms}',
+                            value: '${apt.bedrooms} غرف',
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           _SpecChip(
                             icon: Icons.bathtub_rounded,
-                            value: '${apartment.bathrooms}',
+                            value: '${apt.bathrooms} حمام',
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
                           _SpecChip(
                             icon: Icons.square_foot_rounded,
-                            value: '${apartment.area} م²',
+                            value: '${apt.area.round()} م²',
                           ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+
+                      // ── Address & Owner Divider ──
+                      Container(
+                        height: 1,
+                        color: context.borderColor.withValues(alpha: 0.5),
+                      ),
                       const SizedBox(height: 10),
-                      // ── Address ──
+
+                      // ── Address & Host Row ──
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            Icons.place_outlined,
-                            color: context.textSecondary,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 4),
                           Expanded(
-                            child: Text(
-                              apartment.address,
-                              style: TextStyle(
-                                color: context.textSecondary,
-                                fontSize: 12,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.place_outlined,
+                                  color: context.textSecondary,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    apt.address,
+                                    style: TextStyle(
+                                      color: context.textSecondary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
+                          ),
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 10,
+                                backgroundColor: context.accentColor.withValues(alpha: 0.2),
+                                child: Icon(Icons.person, size: 12, color: context.accentColor),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                apt.ownerName.isNotEmpty ? apt.ownerName : 'المالك',
+                                style: TextStyle(
+                                  color: context.textPrimary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -221,22 +356,22 @@ class _SpecChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: context.accentColor.withValues(alpha: 0.08),
-        borderRadius: AppRadius.smBr,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: context.accentColor, size: 14),
-          const SizedBox(width: 4),
+          const SizedBox(width: 5),
           Text(
             value,
             style: TextStyle(
-              color: context.textSecondary,
+              color: context.textPrimary,
               fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
