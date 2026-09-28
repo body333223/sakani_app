@@ -18,19 +18,39 @@ class ApiConfig {
     }
   }
 
+  static const String _customBaseUrlKey = '__sakani_custom_base_url__';
+
+  /// رابط مخصص يمكن ضبطه ديناميكياً
+  static String? get customBaseUrl => SecureStorageService.getString(_customBaseUrlKey);
+  static set customBaseUrl(String? value) {
+    if (value != null && value.isNotEmpty) {
+      SecureStorageService.setString(_customBaseUrlKey, value);
+    } else {
+      SecureStorageService.remove(_customBaseUrlKey);
+    }
+  }
+
   /// رابط الخادم الأساسي
   static String get baseUrl {
+    final custom = customBaseUrl;
+    if (custom != null && custom.isNotEmpty) {
+      return custom;
+    }
     if (kIsWeb) {
-      return 'http://localhost:5000/api';
+      return 'http://localhost:5093/api';
     }
     try {
       if (Platform.isAndroid) {
-        return 'http://10.0.2.2:5000/api';
+        return 'http://10.0.2.2:5093/api';
+      }
+      if (Platform.isIOS) {
+        // في حالة جهاز آيفون حقيقي متصل بنفس شبكة Wi-Fi
+        return 'http://192.168.1.24:5093/api';
       }
     } catch (_) {
       // Fallback for web or desktop
     }
-    return 'http://localhost:5000/api';
+    return 'http://localhost:5093/api';
   }
 
   /// ترويسات الطلب مع التوكن المشفر
