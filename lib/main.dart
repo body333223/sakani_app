@@ -20,6 +20,9 @@ import 'package:sakani/features/apartments/presentation/screens/dashboard_screen
 import 'package:sakani/features/apartments/presentation/screens/add_apartment_screen.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
+import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
+import 'package:sakani/features/wallet/presentation/screens/wallet_screen.dart';
+import 'package:sakani/features/settings/presentation/screens/user_profile_screen.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/di/injection_container.dart';
@@ -122,6 +125,18 @@ class SakaniApp extends StatelessWidget {
                   final room = settings.arguments as ChatRoom;
                   return MaterialPageRoute(
                     builder: (_) => ChatScreen(room: room),
+                  );
+                case '/wallet':
+                  return MaterialPageRoute(
+                    builder: (_) => const WalletScreen(),
+                  );
+                case '/kyc':
+                  return MaterialPageRoute(
+                    builder: (_) => const KycScreen(),
+                  );
+                case '/user-profile':
+                  return MaterialPageRoute(
+                    builder: (_) => const UserProfileScreen(),
                   );
                 default:
                   return MaterialPageRoute(builder: (_) => const SplashScreen());

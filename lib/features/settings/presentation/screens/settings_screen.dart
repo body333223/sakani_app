@@ -14,6 +14,9 @@ import 'package:sakani/features/bookings/presentation/providers/booking_provider
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/features/settings/presentation/providers/theme_provider.dart';
 import 'package:sakani/core/widgets/glass_card.dart';
+import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
+import 'package:sakani/features/wallet/presentation/screens/wallet_screen.dart';
+import 'package:sakani/features/settings/presentation/screens/user_profile_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   final bool isEmbedded;
@@ -35,7 +38,13 @@ class SettingsScreen extends StatelessWidget {
         children: [
           // ── 1. Hero User Profile Card ──
           if (user != null)
-            _HeroProfileCard(user: user, auth: auth, tr: tr)
+            GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+              ),
+              child: _HeroProfileCard(user: user, auth: auth, tr: tr),
+            )
           else
             _GuestProfileCard(tr: tr),
 
@@ -105,10 +114,52 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               children: [
                 _SettingTile(
+                  icon: Icons.account_circle_rounded,
+                  iconColor: context.accentColor,
+                  title: 'الملف الشخصي الكامل',
+                  subtitle: 'عرض كافة البيانات الشخصية والتوثيق',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const UserProfileScreen()),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(color: context.borderColor, height: 1),
+                ),
+                _SettingTile(
+                  icon: Icons.account_balance_wallet_rounded,
+                  iconColor: context.accentColor,
+                  title: 'محفظة سكني الرقمية',
+                  subtitle: 'شحن رصيد وإدارة المعاملات المالية',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WalletScreen()),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(color: context.borderColor, height: 1),
+                ),
+                _SettingTile(
+                  icon: Icons.badge_outlined,
+                  iconColor: context.accentColor,
+                  title: 'توثيق الهوية الرسمية (KYC)',
+                  subtitle: 'بطاقة الرقم القومي أو جواز السفر',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const KycScreen()),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(color: context.borderColor, height: 1),
+                ),
+                _SettingTile(
                   icon: Icons.person_outline_rounded,
                   iconColor: context.accentColor,
-                  title: 'تعديل البيانات الشخصية',
-                  subtitle: 'الاسم، رقم الهاتف، والبيانات العامة',
+                  title: 'تعديل البيانات السريعة',
+                  subtitle: 'تعديل الاسم ورقم الهاتف',
                   onTap: () => _showEditProfileDialog(context, user, auth),
                 ),
                 Padding(

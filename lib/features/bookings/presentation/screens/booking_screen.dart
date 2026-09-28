@@ -10,6 +10,8 @@ import 'package:sakani/core/widgets/gradient_button.dart';
 import 'package:sakani/core/widgets/section_header.dart';
 import 'package:sakani/core/widgets/app_snackbar.dart';
 import 'package:sakani/features/bookings/presentation/cubit/booking_cubit.dart';
+import 'package:sakani/core/services/kyc_service.dart';
+import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
 
 class BookingScreen extends StatefulWidget {
   final Apartment apartment;
@@ -103,6 +105,47 @@ class _BookingScreenState extends State<BookingScreen> {
 
   Future<void> _book() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (!KycService().isVerified) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: context.surfaceColor,
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBr),
+          title: Row(
+            children: [
+              Icon(Icons.shield_outlined, color: context.accentColor),
+              const SizedBox(width: 8),
+              const Text('توثيق الهوية الرسمية', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+            ],
+          ),
+          content: const Text(
+            'وفقاً للتعليمات الأمنية، يُشترط رفع صورة بطاقة الرقم القومي أو جواز السفر لضمان حقوق المؤجر والمستأجر. هل ترغب في رفع الهوية الآن؟',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text('المتابعة وتأكيد الحجز', style: TextStyle(color: context.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(ctx, false);
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const KycScreen()),
+                );
+                setState(() {});
+              },
+              child: const Text('رفع الهوية الآن'),
+            ),
+          ],
+        ),
+      );
+      if (proceed != true && !KycService().isVerified) return;
+    }
+
+    if (!mounted) return;
+
     final bookingProv = context.read<BookingProvider>();
     final user = context.read<AuthProvider>().user;
     if (user == null) return;
@@ -334,7 +377,77 @@ class _BookingScreenState extends State<BookingScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 32),
+              // ── Identity Verification (KYC) Card ──
+              Builder(
+                builder: (context) {
+                  final isVerified = KycService().isVerified;
+                  final kycData = KycService().currentData;
+
+                  return Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isVerified
+                          ? AppColors.success.withValues(alpha: 0.1)
+                          : context.accentColor.withValues(alpha: 0.1),
+                      borderRadius: AppRadius.mdBr,
+                      border: Border.all(
+                        color: isVerified
+                            ? AppColors.success.withValues(alpha: 0.3)
+                            : context.accentColor.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isVerified ? Icons.verified_user_rounded : Icons.badge_outlined,
+                          color: isVerified ? AppColors.success : context.accentColor,
+                          size: 26,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isVerified ? 'الهوية موثقة رسمياً ✅' : 'توثيق الهوية لتأكيد الحجز',
+                                style: TextStyle(
+                                  color: isVerified ? AppColors.success : context.accentColor,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isVerified
+                                    ? 'بياناتك معتمدة (${kycData.documentType == "national_id" ? "بطاقة الرقم القومي" : "جواز السفر"})'
+                                    : 'ارفع صورة البطاقة أو الباسبور لحماية وتأمين حجزك',
+                                style: TextStyle(color: context.textSecondary, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const KycScreen()),
+                            );
+                            setState(() {});
+                          },
+                          child: Text(
+                            isVerified ? 'تعديل' : 'رفع البطاقة',
+                            style: TextStyle(
+                              color: isVerified ? AppColors.success : context.accentColor,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
 
               // ── Summary ──
               StyledCard(
