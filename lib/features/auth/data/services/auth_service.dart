@@ -203,8 +203,17 @@ class AuthService {
 
   /// حفظ وتحديث المستخدم الحالي
   void _persistUser(AppUser user) {
+    syncAppUser(user);
+  }
+
+  /// مزامنة المستخدم الحالي عبر التطبيق بالكامل
+  static void syncAppUser(AppUser? user) {
     _currentUser = user;
-    SecureStorageService.setMap(_userSessionKey, user.toMap());
-    _authStateController.add(user);
+    if (user != null) {
+      SecureStorageService.setMap(_userSessionKey, user.toMap());
+    } else {
+      SecureStorageService.remove(_userSessionKey);
+    }
+    _authStateController.add(_currentUser);
   }
 }

@@ -5,6 +5,7 @@ import 'package:sakani/core/utils/result.dart';
 import 'package:sakani/features/auth/data/datasources/auth_local_data_source.dart';
 import 'package:sakani/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:sakani/features/auth/data/models/user_model.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/auth/domain/entities/user_entity.dart';
 import 'package:sakani/features/auth/domain/repositories/auth_repository.dart';
 
@@ -101,6 +102,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<void>> signOut() async {
     _currentUser = null;
     localDataSource.clearCache();
+    AuthService.syncAppUser(null);
     _authStateController.add(null);
     return const Success(null);
   }
@@ -131,6 +133,7 @@ class AuthRepositoryImpl implements AuthRepository {
   void _persist(UserModel user) {
     _currentUser = user;
     localDataSource.cacheUser(user);
+    AuthService.syncAppUser(user);
     _authStateController.add(user);
   }
 }

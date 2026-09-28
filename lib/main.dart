@@ -24,6 +24,8 @@ import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/di/injection_container.dart';
 import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_state.dart';
+import 'package:sakani/features/splash/presentation/screens/splash_screen.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
 import 'package:sakani/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:sakani/features/chat/presentation/cubit/chat_cubit.dart';
@@ -79,9 +81,11 @@ class SakaniApp extends StatelessWidget {
               }
               return const Locale('ar');
             },
-            initialRoute: '/login',
+            initialRoute: '/splash',
             onGenerateRoute: (settings) {
               switch (settings.name) {
+                case '/splash':
+                  return MaterialPageRoute(builder: (_) => const SplashScreen());
                 case '/login':
                   return MaterialPageRoute(builder: (_) => const LoginScreen());
                 case '/register':
@@ -118,7 +122,7 @@ class SakaniApp extends StatelessWidget {
                     builder: (_) => ChatScreen(room: room),
                   );
                 default:
-                  return MaterialPageRoute(builder: (_) => const LoginScreen());
+                  return MaterialPageRoute(builder: (_) => const SplashScreen());
               }
             },
           );
@@ -133,25 +137,44 @@ class HomeRouter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        if (state is AuthLoading) {
+          return Scaffold(
+            backgroundColor: context.bgColor,
+            body: Center(
+              child: CircularProgressIndicator(color: context.accentColor),
+            ),
+          );
+        }
 
-    if (auth.isLoading) {
-      return Scaffold(
-        backgroundColor: context.bgColor,
-        body: Center(
-          child: CircularProgressIndicator(color: context.accentColor),
-        ),
-      );
-    }
+        if (state is Authenticated) {
+          if (state.user.isOwner) {
+            return const OwnerDashboardScreen();
+          }
+          return const TenantHomeScreen();
+        }
 
-    // If not loading and user is null, redirect to Login
-    if (auth.user == null) {
-      return const LoginScreen();
-    }
+        // Fallback: check AuthProvider
+        final auth = context.watch<AuthProvider>();
+        if (auth.isLoggedIn && auth.user != null) {
+          if (auth.isOwner) {
+            return const OwnerDashboardScreen();
+          }
+          return const TenantHomeScreen();
+        }
 
-    if (auth.isOwner) {
-      return const OwnerDashboardScreen();
-    }
-    return const TenantHomeScreen();
+        // Fallback: check AuthService directly
+        final directUser = AuthService().currentUser;
+        if (directUser != null) {
+          if (directUser.role == 'owner') {
+            return const OwnerDashboardScreen();
+          }
+          return const TenantHomeScreen();
+        }
+
+        return const LoginScreen();
+      },
+    );
   }
 }
