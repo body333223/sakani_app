@@ -14,7 +14,7 @@ workflows:
 
       - name: Install CocoaPods dependencies
         script: |
-          find . -name "Podfile" -execdir pod install \;
+          cd ios && pod install
 
       - name: Build iOS IPA
         script: |
