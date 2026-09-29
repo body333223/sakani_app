@@ -29,7 +29,8 @@ class ApiConfig {
   }
 
   /// رابط الخادم الرسمي المباشر عبر الإنترنت (HTTPS)
-  static const String liveServerUrl = 'https://railroad-infrastructure-sunshine-sheep.trycloudflare.com/api';
+  static const String liveServerUrl = 'https://legislation-offshore-nec-truly.trycloudflare.com/api';
+  static const String localServerUrl = 'http://192.168.1.24:5093/api';
 
   /// رابط الخادم الأساسي
   static String get baseUrl {
