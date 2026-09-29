@@ -63,9 +63,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               : DateTime.now(),
         );
       } else {
-        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+        Map<String, dynamic>? errorData;
+        try {
+          final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+          if (decoded is Map<String, dynamic>) {
+            errorData = decoded;
+          }
+        } catch (_) {}
+
+        final message = errorData?['message'] as String?;
+        if (message != null && message.isNotEmpty) {
+          throw ServerException(message, response.statusCode);
+        }
+
+        if (response.statusCode >= 500) {
+          throw ServerException(
+            'تعذر الاتصال بالخادم، يبدو أن نفق الاتصال أو الخادم قيد إعادة التشغيل (${response.statusCode})',
+            response.statusCode,
+          );
+        }
+
         throw ServerException(
-          errorData['message'] ?? 'بيانات الدخول غير صحيحة',
+          'بيانات الدخول غير صحيحة',
           response.statusCode,
         );
       }
@@ -73,6 +92,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw const NetworkException('تعذر الاتصال بالخادم، يرجى التحقق من اتصال الإنترنت');
     } on TimeoutException {
       throw const NetworkException('انتهت مهلة الاتصال بالخادم، يرجى المحاولة مرة أخرى');
+    } on FormatException {
+      throw const NetworkException('استجابة غير متوقعة من بوابة الخادم، جاري إعادة توجيه الاتصال.');
     } catch (e) {
       if (e is ServerException || e is NetworkException) rethrow;
       throw ServerException('حدث خطأ أثناء تسجيل الدخول: $e');
@@ -120,9 +141,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               : DateTime.now(),
         );
       } else {
-        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
+        Map<String, dynamic>? errorData;
+        try {
+          final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+          if (decoded is Map<String, dynamic>) {
+            errorData = decoded;
+          }
+        } catch (_) {}
+
+        final message = errorData?['message'] as String?;
+        if (message != null && message.isNotEmpty) {
+          throw ServerException(message, response.statusCode);
+        }
+
+        if (response.statusCode >= 500) {
+          throw ServerException(
+            'تعذر إتمام التسجيل، الخادم قيد إعادة التشغيل (${response.statusCode})',
+            response.statusCode,
+          );
+        }
+
         throw ServerException(
-          errorData['message'] ?? 'فشل إنشاء الحساب، يرجى التحقق من البيانات',
+          'فشل إنشاء الحساب، يرجى التحقق من البيانات',
           response.statusCode,
         );
       }
@@ -130,6 +170,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw const NetworkException('تعذر الاتصال بالخادم، يرجى التحقق من اتصال الإنترنت');
     } on TimeoutException {
       throw const NetworkException('انتهت مهلة الاتصال بالخادم، يرجى المحاولة مرة أخرى');
+    } on FormatException {
+      throw const NetworkException('استجابة غير متوقعة من بوابة الخادم، جاري إعادة توجيه الاتصال.');
     } catch (e) {
       if (e is ServerException || e is NetworkException) rethrow;
       throw ServerException('حدث خطأ أثناء إنشاء الحساب: $e');

@@ -65,14 +65,29 @@ class AuthService {
         _persistUser(user);
         return user;
       } else {
-        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
-        final msg = errorData['message'] ?? 'بيانات الدخول غير صحيحة';
-        throw Exception(msg);
+        Map<String, dynamic>? errorData;
+        try {
+          final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+          if (decoded is Map<String, dynamic>) {
+            errorData = decoded;
+          }
+        } catch (_) {}
+
+        final msg = errorData?['message'] as String?;
+        if (msg != null && msg.isNotEmpty) {
+          throw Exception(msg);
+        }
+        if (response.statusCode >= 500) {
+          throw Exception('تعذر الاتصال بالخادم السحابي حالياً (${response.statusCode})');
+        }
+        throw Exception('بيانات الدخول غير صحيحة');
       }
     } on http.ClientException {
       throw Exception('تعذر الاتصال بالخادم، يرجى التحقق من اتصال الإنترنت');
     } on TimeoutException {
       throw Exception('انتهت مهلة الاتصال بالخادم، يرجى المحاولة مرة أخرى');
+    } on FormatException {
+      throw Exception('استجابة غير متوقعة من بوابة الخادم، جاري إعادة توجيه الاتصال.');
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('حدث خطأ أثناء تسجيل الدخول: $e');
@@ -131,14 +146,29 @@ class AuthService {
         _persistUser(user);
         return user;
       } else {
-        final errorData = jsonDecode(utf8.decode(response.bodyBytes));
-        final msg = errorData['message'] ?? 'فشل إنشاء الحساب، يرجى التحقق من البيانات';
-        throw Exception(msg);
+        Map<String, dynamic>? errorData;
+        try {
+          final decoded = jsonDecode(utf8.decode(response.bodyBytes));
+          if (decoded is Map<String, dynamic>) {
+            errorData = decoded;
+          }
+        } catch (_) {}
+
+        final msg = errorData?['message'] as String?;
+        if (msg != null && msg.isNotEmpty) {
+          throw Exception(msg);
+        }
+        if (response.statusCode >= 500) {
+          throw Exception('تعذر إتمام التسجيل، الخادم قيد إعادة التشغيل (${response.statusCode})');
+        }
+        throw Exception('فشل إنشاء الحساب، يرجى التحقق من البيانات');
       }
     } on http.ClientException {
       throw Exception('تعذر الاتصال بالخادم، يرجى التحقق من اتصال الإنترنت');
     } on TimeoutException {
       throw Exception('انتهت مهلة الاتصال بالخادم، يرجى المحاولة مرة أخرى');
+    } on FormatException {
+      throw Exception('استجابة غير متوقعة من بوابة الخادم، جاري إعادة توجيه الاتصال.');
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('حدث خطأ أثناء إنشاء الحساب: $e');
