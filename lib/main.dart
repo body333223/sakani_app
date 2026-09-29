@@ -22,6 +22,7 @@ import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart'
 import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
 import 'package:sakani/features/wallet/presentation/screens/wallet_screen.dart';
+import 'package:sakani/core/utils/page_transitions.dart';
 import 'package:sakani/features/settings/presentation/screens/user_profile_screen.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -90,56 +91,40 @@ class SakaniApp extends StatelessWidget {
             onGenerateRoute: (settings) {
               switch (settings.name) {
                 case '/splash':
-                  return MaterialPageRoute(builder: (_) => const SplashScreen());
+                  return LuxuryPageRoute(page: const SplashScreen());
                 case '/login':
-                  return MaterialPageRoute(builder: (_) => const LoginScreen());
+                  return LuxuryPageRoute(page: const LoginScreen());
                 case '/register':
-                  return MaterialPageRoute(
-                    builder: (_) => const RegisterScreen(),
-                  );
+                  return LuxuryPageRoute(page: const RegisterScreen());
                 case '/home':
-                  return MaterialPageRoute(builder: (_) => const HomeRouter());
+                  return LuxuryPageRoute(page: const HomeRouter());
                 case '/apartment-detail':
                   final apartment = settings.arguments as Apartment;
-                  return MaterialPageRoute(
-                    builder: (_) => ApartmentDetailScreen(apartment: apartment),
+                  return LuxuryPageRoute(
+                    page: ApartmentDetailScreen(apartment: apartment),
                   );
                 case '/booking':
                   final apartment = settings.arguments as Apartment;
-                  return MaterialPageRoute(
-                    builder: (_) => BookingScreen(apartment: apartment),
+                  return LuxuryPageRoute(
+                    page: BookingScreen(apartment: apartment),
                   );
                 case '/my-bookings':
-                  return MaterialPageRoute(
-                    builder: (_) => const MyBookingsScreen(),
-                  );
+                  return LuxuryPageRoute(page: const MyBookingsScreen());
                 case '/add-apartment':
-                  return MaterialPageRoute(
-                    builder: (_) => const AddApartmentScreen(),
-                  );
+                  return LuxuryPageRoute(page: const AddApartmentScreen());
                 case '/chat-list':
-                  return MaterialPageRoute(
-                    builder: (_) => const ChatListScreen(),
-                  );
+                  return LuxuryPageRoute(page: const ChatListScreen());
                 case '/chat':
                   final room = settings.arguments as ChatRoom;
-                  return MaterialPageRoute(
-                    builder: (_) => ChatScreen(room: room),
-                  );
+                  return LuxuryPageRoute(page: ChatScreen(room: room));
                 case '/wallet':
-                  return MaterialPageRoute(
-                    builder: (_) => const WalletScreen(),
-                  );
+                  return LuxuryPageRoute(page: const WalletScreen());
                 case '/kyc':
-                  return MaterialPageRoute(
-                    builder: (_) => const KycScreen(),
-                  );
+                  return LuxuryPageRoute(page: const KycScreen());
                 case '/user-profile':
-                  return MaterialPageRoute(
-                    builder: (_) => const UserProfileScreen(),
-                  );
+                  return LuxuryPageRoute(page: const UserProfileScreen());
                 default:
-                  return MaterialPageRoute(builder: (_) => const SplashScreen());
+                  return LuxuryPageRoute(page: const SplashScreen());
               }
             },
           );

@@ -50,7 +50,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
-        return data.map((item) => BookingModel.fromMap(item, item['id'] ?? '')).toList();
+        return data
+            .map((item) => BookingModel.fromMap(item, item['id'] ?? ''))
+            .toList();
       }
       return [];
     } catch (_) {
@@ -70,7 +72,9 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
-        return data.map((item) => BookingModel.fromMap(item, item['id'] ?? '')).toList();
+        return data
+            .map((item) => BookingModel.fromMap(item, item['id'] ?? ''))
+            .toList();
       }
       return [];
     } catch (_) {

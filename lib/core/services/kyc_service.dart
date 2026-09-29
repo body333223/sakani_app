@@ -14,6 +14,7 @@ class KycData {
   final String documentNumber;
   final String? frontPhoto;
   final String? backPhoto;
+  final String? selfiePhoto;
   final DateTime? verifiedAt;
 
   const KycData({
@@ -22,6 +23,7 @@ class KycData {
     this.documentNumber = '',
     this.frontPhoto,
     this.backPhoto,
+    this.selfiePhoto,
     this.verifiedAt,
   });
 
@@ -33,6 +35,7 @@ class KycData {
         'documentNumber': documentNumber,
         'frontPhoto': frontPhoto,
         'backPhoto': backPhoto,
+        'selfiePhoto': selfiePhoto,
         'verifiedAt': verifiedAt?.toIso8601String(),
       };
 
@@ -51,6 +54,7 @@ class KycData {
       documentNumber: json['documentNumber'] as String? ?? '',
       frontPhoto: json['frontPhoto'] as String?,
       backPhoto: json['backPhoto'] as String?,
+      selfiePhoto: json['selfiePhoto'] as String?,
       verifiedAt: json['verifiedAt'] != null
           ? DateTime.tryParse(json['verifiedAt'] as String)
           : null,
@@ -87,14 +91,15 @@ class KycService extends ChangeNotifier {
     required String documentNumber,
     required String frontPhoto,
     String? backPhoto,
+    String? selfiePhoto,
   }) async {
-    // In luxury hospitality apps, the uploaded national ID or passport is verified
     _currentData = KycData(
       status: KycStatus.verified,
       documentType: documentType,
       documentNumber: documentNumber,
       frontPhoto: frontPhoto,
       backPhoto: backPhoto,
+      selfiePhoto: selfiePhoto,
       verifiedAt: DateTime.now(),
     );
 

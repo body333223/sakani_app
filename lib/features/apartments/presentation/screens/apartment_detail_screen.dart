@@ -1,7 +1,10 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/widgets/app_snackbar.dart';
+import 'package:sakani/core/widgets/app_cached_image.dart';
 import 'package:sakani/core/widgets/gradient_button.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
@@ -45,28 +48,43 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                   child: CircleAvatar(
                     backgroundColor: Colors.black.withValues(alpha: 0.5),
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                      icon: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
                 ),
                 actions: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
                     child: CircleAvatar(
                       backgroundColor: Colors.black.withValues(alpha: 0.5),
                       child: IconButton(
                         icon: Icon(
-                          _isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          color: _isFavorite ? const Color(0xFFEF4444) : Colors.white,
+                          _isFavorite
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: _isFavorite
+                              ? const Color(0xFFEF4444)
+                              : Colors.white,
                           size: 20,
                         ),
                         onPressed: () {
                           setState(() => _isFavorite = !_isFavorite);
                           AppSnackbar.show(
                             context,
-                            message: _isFavorite ? 'تمت الإضافة للمفضلة' : 'تمت الإزالة من المفضلة',
-                            type: _isFavorite ? ToastType.success : ToastType.info,
+                            message: _isFavorite
+                                ? 'تمت الإضافة للمفضلة'
+                                : 'تمت الإزالة من المفضلة',
+                            type: _isFavorite
+                                ? ToastType.success
+                                : ToastType.info,
                           );
                         },
                       ),
@@ -77,7 +95,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                     child: CircleAvatar(
                       backgroundColor: Colors.black.withValues(alpha: 0.5),
                       child: IconButton(
-                        icon: const Icon(Icons.share_outlined, color: Colors.white, size: 20),
+                        icon: const Icon(
+                          Icons.share_outlined,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         onPressed: () {
                           AppSnackbar.show(
                             context,
@@ -98,16 +120,19 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                         child: images.isNotEmpty
                             ? PageView.builder(
                                 itemCount: images.length,
-                                onPageChanged: (i) => setState(() => _currentImageIndex = i),
+                                onPageChanged: (i) =>
+                                    setState(() => _currentImageIndex = i),
                                 itemBuilder: (context, index) {
-                                  return Image.network(
-                                    images[index],
+                                  return AppCachedImage(
+                                    imageUrl: images[index],
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, _, _) => _ImagePlaceholder(color: context.cardColor),
                                   );
                                 },
                               )
-                            : _ImagePlaceholder(color: context.cardColor),
+                            : const AppCachedImage(
+                                imageUrl: '',
+                                fit: BoxFit.cover,
+                              ),
                       ),
 
                       // Gradient Bottom Fade
@@ -121,7 +146,10 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, Colors.black.withValues(alpha: 0.7)],
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.7),
+                              ],
                             ),
                           ),
                         ),
@@ -133,7 +161,10 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           bottom: 16,
                           left: 16,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.black.withValues(alpha: 0.65),
                               borderRadius: AppRadius.pillBr,
@@ -166,14 +197,19 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 5,
+                            ),
                             decoration: BoxDecoration(
                               color: apt.isAvailable
                                   ? AppColors.success.withValues(alpha: 0.15)
                                   : AppColors.error.withValues(alpha: 0.15),
                               borderRadius: AppRadius.pillBr,
                               border: Border.all(
-                                color: apt.isAvailable ? AppColors.success : AppColors.error,
+                                color: apt.isAvailable
+                                    ? AppColors.success
+                                    : AppColors.error,
                                 width: 0.8,
                               ),
                             ),
@@ -183,15 +219,21 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                   width: 7,
                                   height: 7,
                                   decoration: BoxDecoration(
-                                    color: apt.isAvailable ? AppColors.success : AppColors.error,
+                                    color: apt.isAvailable
+                                        ? AppColors.success
+                                        : AppColors.error,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  apt.isAvailable ? 'متاحة للحجز الآن' : 'محجوزة حالياً',
+                                  apt.isAvailable
+                                      ? 'متاحة للحجز الآن'
+                                      : 'محجوزة حالياً',
                                   style: TextStyle(
-                                    color: apt.isAvailable ? AppColors.success : AppColors.error,
+                                    color: apt.isAvailable
+                                        ? AppColors.success
+                                        : AppColors.error,
                                     fontWeight: FontWeight.w700,
                                     fontSize: 12,
                                   ),
@@ -201,7 +243,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           ),
                           Row(
                             children: [
-                              Icon(Icons.star_rounded, color: context.accentColor, size: 20),
+                              Icon(
+                                Icons.star_rounded,
+                                color: context.accentColor,
+                                size: 20,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 '4.95',
@@ -239,7 +285,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                       // Location Row
                       Row(
                         children: [
-                          Icon(Icons.location_on_rounded, color: context.accentColor, size: 16),
+                          Icon(
+                            Icons.location_on_rounded,
+                            color: context.accentColor,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
@@ -264,7 +314,9 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           border: Border.all(color: context.borderColor),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: context.isDark ? 0.3 : 0.05),
+                              color: Colors.black.withValues(
+                                alpha: context.isDark ? 0.3 : 0.05,
+                              ),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -273,13 +325,29 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _SpecItem(icon: Icons.king_bed_outlined, label: 'الغرف', value: '${apt.bedrooms}'),
+                            _SpecItem(
+                              icon: Icons.king_bed_outlined,
+                              label: 'الغرف',
+                              value: '${apt.bedrooms}',
+                            ),
                             _buildDivider(context),
-                            _SpecItem(icon: Icons.bathtub_outlined, label: 'الحمامات', value: '${apt.bathrooms}'),
+                            _SpecItem(
+                              icon: Icons.bathtub_outlined,
+                              label: 'الحمامات',
+                              value: '${apt.bathrooms}',
+                            ),
                             _buildDivider(context),
-                            _SpecItem(icon: Icons.straighten_outlined, label: 'المساحة', value: '${apt.area.round()} م²'),
+                            _SpecItem(
+                              icon: Icons.straighten_outlined,
+                              label: 'المساحة',
+                              value: '${apt.area.round()} م²',
+                            ),
                             _buildDivider(context),
-                            _SpecItem(icon: Icons.group_outlined, label: 'الضيوف', value: '${apt.maxGuests}'),
+                            _SpecItem(
+                              icon: Icons.group_outlined,
+                              label: 'الضيوف',
+                              value: '${apt.maxGuests}',
+                            ),
                           ],
                         ),
                       ),
@@ -321,7 +389,10 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           runSpacing: 10,
                           children: apt.amenities.map((amenity) {
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 9,
+                              ),
                               decoration: BoxDecoration(
                                 color: context.cardColor,
                                 borderRadius: BorderRadius.circular(12),
@@ -330,7 +401,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(_getAmenityIcon(amenity), size: 16, color: context.accentColor),
+                                  Icon(
+                                    _getAmenityIcon(amenity),
+                                    size: 16,
+                                    color: context.accentColor,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     amenity,
@@ -360,8 +435,14 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           children: [
                             CircleAvatar(
                               radius: 26,
-                              backgroundColor: context.accentColor.withValues(alpha: 0.15),
-                              child: Icon(Icons.person_rounded, size: 28, color: context.accentColor),
+                              backgroundColor: context.accentColor.withValues(
+                                alpha: 0.15,
+                              ),
+                              child: Icon(
+                                Icons.person_rounded,
+                                size: 28,
+                                color: context.accentColor,
+                              ),
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -369,7 +450,9 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    apt.ownerName.isNotEmpty ? apt.ownerName : 'مالك السكن',
+                                    apt.ownerName.isNotEmpty
+                                        ? apt.ownerName
+                                        : 'مالك السكن',
                                     style: TextStyle(
                                       color: context.textPrimary,
                                       fontSize: 15,
@@ -379,7 +462,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                   const SizedBox(height: 3),
                                   Row(
                                     children: [
-                                      Icon(Icons.verified_rounded, size: 14, color: context.accentColor),
+                                      Icon(
+                                        Icons.verified_rounded,
+                                        size: 14,
+                                        color: context.accentColor,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         'مالك معتمد وموثق',
@@ -413,7 +500,9 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
               padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
               decoration: BoxDecoration(
                 color: context.cardColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 border: Border(top: BorderSide(color: context.borderColor)),
                 boxShadow: [
                   BoxShadow(
@@ -434,7 +523,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                       children: [
                         const Text(
                           'الإيجار الشهري',
-                          style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Row(
@@ -449,7 +542,10 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                             ),
                             const Text(
                               ' ج.م',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -466,9 +562,15 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                       decoration: BoxDecoration(
                         color: context.accentColor.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
-                        border: Border.all(color: context.accentColor.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: context.accentColor.withValues(alpha: 0.3),
+                        ),
                       ),
-                      child: Icon(Icons.chat_bubble_outline_rounded, color: context.accentColor, size: 20),
+                      child: Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        color: context.accentColor,
+                        size: 20,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -501,7 +603,11 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
     final authCubit = context.read<AuthCubit>();
     final user = authCubit.currentUser ?? context.read<AuthProvider>().user;
     if (user == null) {
-      AppSnackbar.show(context, message: 'يرجى تسجيل الدخول أولاً للمحادثة', type: ToastType.warning);
+      AppSnackbar.show(
+        context,
+        message: 'يرجى تسجيل الدخول أولاً للمحادثة',
+        type: ToastType.warning,
+      );
       return;
     }
 
@@ -551,7 +657,11 @@ class _SpecItem extends StatelessWidget {
   final String label;
   final String value;
 
-  const _SpecItem({required this.icon, required this.label, required this.value});
+  const _SpecItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -569,10 +679,7 @@ class _SpecItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(
-            color: context.textSecondary,
-            fontSize: 11,
-          ),
+          style: TextStyle(color: context.textSecondary, fontSize: 11),
         ),
       ],
     );

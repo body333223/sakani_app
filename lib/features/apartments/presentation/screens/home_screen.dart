@@ -19,6 +19,7 @@ import 'package:sakani/features/bookings/presentation/screens/my_bookings_screen
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
+import 'package:sakani/core/widgets/staggered_entrance.dart';
 
 class TenantHomeScreen extends StatefulWidget {
   const TenantHomeScreen({super.key});
@@ -117,25 +118,45 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                 children: [
                   Expanded(
                     child: Container(
+                      height: 48,
                       decoration: BoxDecoration(
                         color: context.cardColor,
-                        borderRadius: AppRadius.mdBr,
-                        border: Border.all(color: context.borderColor),
-                        boxShadow: AppShadows.card(context),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: context.isDark
+                              ? Colors.white.withValues(alpha: 0.08)
+                              : context.borderColor,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: TextField(
                         controller: _searchCtl,
                         onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                        style: TextStyle(
+                          color: context.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                         decoration: InputDecoration(
                           hintText: 'ابحث عن مدينة، حي، أو مواصفات...',
                           hintStyle: TextStyle(
-                            color: context.textSecondary.withValues(alpha: 0.6),
-                            fontSize: 14,
+                            color: context.textSecondary.withValues(alpha: 0.65),
+                            fontSize: 13.5,
                           ),
-                          prefixIcon: Icon(Icons.search_rounded, color: context.accentColor),
+                          prefixIcon: Icon(
+                            Icons.search_rounded,
+                            color: context.accentColor,
+                            size: 22,
+                          ),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 20),
+                                  icon: const Icon(Icons.clear_rounded, size: 18),
                                   onPressed: () {
                                     _searchCtl.clear();
                                     setState(() => _searchQuery = '');
@@ -152,7 +173,8 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                   ),
                   const SizedBox(width: 10),
                   // Filter Button with Badge
-                  GestureDetector(
+                  BouncingTap(
+                    scaleFactor: 0.93,
                     onTap: () => FilterBottomSheet.show(
                       context: context,
                       initialOptions: state.filterOptions,
@@ -161,20 +183,44 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                       matchingCount: state.filteredApartments.length,
                     ),
                     child: Container(
-                      padding: const EdgeInsets.all(12),
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: state.filterOptions.hasActiveFilters
-                            ? context.accentColor
-                            : context.cardColor,
-                        borderRadius: AppRadius.mdBr,
+                        gradient: state.filterOptions.hasActiveFilters
+                            ? LinearGradient(
+                                colors: [context.accentColor, AppColors.goldDark],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              )
+                            : null,
+                        color: state.filterOptions.hasActiveFilters ? null : context.cardColor,
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: state.filterOptions.hasActiveFilters
                               ? context.accentColor
-                              : context.borderColor,
+                              : (context.isDark
+                                  ? Colors.white.withValues(alpha: 0.08)
+                                  : context.borderColor),
+                          width: 1.2,
                         ),
-                        boxShadow: AppShadows.card(context),
+                        boxShadow: state.filterOptions.hasActiveFilters
+                            ? [
+                                BoxShadow(
+                                  color: context.accentColor.withValues(alpha: 0.4),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                       ),
                       child: Stack(
+                        alignment: Alignment.center,
                         clipBehavior: Clip.none,
                         children: [
                           Icon(
@@ -186,14 +232,25 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                           ),
                           if (state.filterOptions.hasActiveFilters)
                             Positioned(
-                              top: -6,
-                              right: -6,
-                              child: CircleAvatar(
-                                radius: 8,
-                                backgroundColor: AppColors.error,
-                                child: Text(
-                                  '${state.filterOptions.activeFiltersCount}',
-                                  style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold),
+                              top: -4,
+                              right: -4,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.error,
+                                  shape: BoxShape.circle,
+                                ),
+                                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                                child: Center(
+                                  child: Text(
+                                    '${state.filterOptions.activeFiltersCount}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -232,6 +289,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                       itemBuilder: (_, _) => const ShimmerApartmentCard(),
                     )
                   : RefreshIndicator(
+                      color: context.accentColor,
                       onRefresh: () async {
                         context.read<ApartmentCubit>().loadApartments(
                               city: state.selectedCity,
@@ -271,20 +329,40 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(
-                                          'جميع الشقق المتاحة',
-                                          style: TextStyle(
-                                            fontSize: 17,
-                                            fontWeight: FontWeight.w800,
-                                            color: context.textPrimary,
-                                          ),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              width: 4,
+                                              height: 18,
+                                              decoration: BoxDecoration(
+                                                color: context.accentColor,
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'جميع الشقق المتاحة',
+                                              style: TextStyle(
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.w800,
+                                                color: context.textPrimary,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        Text(
-                                          '${filtered.length} شقة',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: context.textSecondary,
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                          decoration: BoxDecoration(
+                                            color: context.accentColor.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            '${filtered.length} شقة',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: context.accentColor,
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -297,12 +375,15 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                 final aptModel = aptEntity is ApartmentModel
                                     ? aptEntity
                                     : ApartmentModel.fromEntity(aptEntity);
-                                return ApartmentCard(
-                                  apartment: aptModel,
-                                  onTap: () => Navigator.pushNamed(
-                                    context,
-                                    '/apartment-detail',
-                                    arguments: aptModel,
+                                return StaggeredEntrance(
+                                  index: actualIndex.clamp(0, 6),
+                                  child: ApartmentCard(
+                                    apartment: aptModel,
+                                    onTap: () => Navigator.pushNamed(
+                                      context,
+                                      '/apartment-detail',
+                                      arguments: aptModel,
+                                    ),
                                   ),
                                 );
                               },
