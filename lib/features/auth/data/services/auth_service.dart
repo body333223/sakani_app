@@ -44,7 +44,7 @@ class AuthService {
               'password': password,
             }),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -110,7 +110,7 @@ class AuthService {
               'photoUrl': photoUrl,
             }),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));

@@ -26,7 +26,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
             headers: ApiConfig.authHeaders,
             body: jsonEncode(booking.toMap()),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -46,7 +46,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
             Uri.parse(ApiConfig.tenantBookings(tenantId)),
             headers: ApiConfig.authHeaders,
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -68,7 +68,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
             Uri.parse(ApiConfig.ownerBookings(ownerId)),
             headers: ApiConfig.authHeaders,
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -91,7 +91,7 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
             headers: ApiConfig.authHeaders,
             body: jsonEncode({'status': status}),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw ServerException('فشل في تحديث حالة الحجز', response.statusCode);

@@ -34,7 +34,7 @@ class ApartmentRemoteDataSourceImpl implements ApartmentRemoteDataSource {
 
       final response = await client
           .get(uri, headers: ApiConfig.authHeaders)
-          .timeout(const Duration(seconds: 5));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -58,7 +58,7 @@ class ApartmentRemoteDataSourceImpl implements ApartmentRemoteDataSource {
             Uri.parse(ApiConfig.ownerApartments(ownerId)),
             headers: ApiConfig.authHeaders,
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -76,7 +76,7 @@ class ApartmentRemoteDataSourceImpl implements ApartmentRemoteDataSource {
     try {
       final response = await client
           .get(Uri.parse(ApiConfig.apartment(id)), headers: ApiConfig.authHeaders)
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -97,7 +97,7 @@ class ApartmentRemoteDataSourceImpl implements ApartmentRemoteDataSource {
             headers: ApiConfig.authHeaders,
             body: jsonEncode(apartment.toMap()),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -119,7 +119,7 @@ class ApartmentRemoteDataSourceImpl implements ApartmentRemoteDataSource {
               headers: ApiConfig.authHeaders,
               body: jsonEncode({'isAvailable': data['isAvailable']}),
             )
-            .timeout(const Duration(seconds: 4));
+            .timeout(ApiConfig.requestTimeout);
       } else {
         await client
             .put(
@@ -127,7 +127,7 @@ class ApartmentRemoteDataSourceImpl implements ApartmentRemoteDataSource {
               headers: ApiConfig.authHeaders,
               body: jsonEncode(data),
             )
-            .timeout(const Duration(seconds: 4));
+            .timeout(ApiConfig.requestTimeout);
       }
     } catch (_) {}
   }
@@ -140,7 +140,7 @@ class ApartmentRemoteDataSourceImpl implements ApartmentRemoteDataSource {
             Uri.parse(ApiConfig.apartment(id)),
             headers: ApiConfig.authHeaders,
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
     } catch (_) {}
   }
 

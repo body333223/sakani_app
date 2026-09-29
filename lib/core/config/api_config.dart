@@ -28,6 +28,9 @@ class ApiConfig {
     }
   }
 
+  /// مهلة طلبات الشبكة
+  static const Duration requestTimeout = Duration(seconds: 15);
+
   /// رابط الخادم الرسمي المباشر عبر الإنترنت (HTTPS)
   static const String liveServerUrl = 'https://legislation-offshore-nec-truly.trycloudflare.com/api';
   static const String localServerUrl = 'http://192.168.1.24:5093/api';

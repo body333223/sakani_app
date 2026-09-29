@@ -33,7 +33,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     try {
       final response = await client
           .get(Uri.parse(ApiConfig.userRooms(userId)), headers: ApiConfig.authHeaders)
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -50,7 +50,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     try {
       final response = await client
           .get(Uri.parse(ApiConfig.roomMessages(roomId)), headers: ApiConfig.authHeaders)
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final List data = jsonDecode(utf8.decode(response.bodyBytes));
@@ -81,7 +81,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
               'text': text,
             }),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(ApiConfig.requestTimeout);
     } catch (_) {}
   }
 
@@ -108,7 +108,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
               'ownerName': ownerName,
             }),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(ApiConfig.requestTimeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
