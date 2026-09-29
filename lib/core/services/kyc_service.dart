@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import '../config/api_config.dart';
 import 'package:sakani/core/security/secure_storage_service.dart';
 
 enum KycStatus {
@@ -108,6 +110,24 @@ class KycService extends ChangeNotifier {
       jsonEncode(_currentData.toJson()),
     );
     notifyListeners();
+
+    // مزامنة التوثيق مع الخادم إن وجد اتصال
+    try {
+      final token = ApiConfig.token;
+      if (token != null && token.isNotEmpty) {
+        http.post(
+          Uri.parse('${ApiConfig.baseUrl}/auth/kyc'),
+          headers: ApiConfig.authHeaders,
+          body: jsonEncode({
+            'documentType': documentType,
+            'documentNumber': documentNumber,
+            'frontPhoto': frontPhoto,
+            'backPhoto': backPhoto,
+            'selfiePhoto': selfiePhoto,
+          }),
+        ).timeout(ApiConfig.requestTimeout);
+      }
+    } catch (_) {}
   }
 
   Future<void> resetVerification() async {
