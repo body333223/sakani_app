@@ -31,8 +31,8 @@ class ApiConfig {
   /// مهلة طلبات الشبكة
   static const Duration requestTimeout = Duration(seconds: 15);
 
-  /// رابط الخادم الرسمي المباشر عبر الإنترنت (HTTPS)
-  static const String liveServerUrl = 'https://treating-compiler-bonds-trout.trycloudflare.com/api';
+  /// رابط الخادم الرسمي المباشر عبر الإنترنت (HTTPS) الدائم والثابت
+  static const String liveServerUrl = 'https://prodigal-overpower-nail.ngrok-free.dev/api';
   static const String localServerUrl = 'http://192.168.1.24:5093/api';
 
   /// رابط الخادم الأساسي
@@ -44,12 +44,13 @@ class ApiConfig {
     return liveServerUrl;
   }
 
-  /// ترويسات الطلب مع التوكن المشفر
+  /// ترويسات الطلب مع التوكن المشفر وتخطي صفحة تحذير ngrok
   static Map<String, String> get authHeaders {
     final headers = <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
       'Accept': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
+      'ngrok-skip-browser-warning': 'true',
     };
     final currentToken = token;
     if (currentToken != null && currentToken.isNotEmpty) {

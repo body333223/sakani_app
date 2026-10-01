@@ -39,7 +39,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await client
           .post(
             Uri.parse(ApiConfig.login),
-            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            headers: ApiConfig.authHeaders,
             body: jsonEncode({
               'email': email.trim(),
               'password': password,
@@ -113,7 +113,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await client
           .post(
             Uri.parse(ApiConfig.register),
-            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            headers: ApiConfig.authHeaders,
             body: jsonEncode({
               'email': email.trim(),
               'password': password,

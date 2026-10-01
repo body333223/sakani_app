@@ -38,7 +38,7 @@ class AuthService {
       final response = await http
           .post(
             Uri.parse(ApiConfig.login),
-            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            headers: ApiConfig.authHeaders,
             body: jsonEncode({
               'email': trimmedEmail,
               'password': password,
@@ -115,7 +115,7 @@ class AuthService {
       final response = await http
           .post(
             Uri.parse(ApiConfig.register),
-            headers: {'Content-Type': 'application/json; charset=UTF-8'},
+            headers: ApiConfig.authHeaders,
             body: jsonEncode({
               'email': trimmedEmail,
               'password': password,
