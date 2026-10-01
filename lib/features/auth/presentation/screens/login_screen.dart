@@ -35,13 +35,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
   }
 
-  void _fillDemoAccount(String email, String password) {
-    setState(() {
-      _emailCtl.text = email;
-      _passwordCtl.text = password;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LocaleProvider>().lang;
@@ -177,50 +170,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                       const SizedBox(height: 28),
-
-                      // ── Quick Demo Accounts Row ──
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.bolt_rounded, size: 14, color: context.accentColor),
-                              const SizedBox(width: 4),
-                              Text(
-                                'حسابات تجريبية سريعة (نقرة واحدة)',
-                                style: TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: context.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildDemoChip(
-                                  icon: Icons.person_rounded,
-                                  label: 'مستأجر',
-                                  email: 'tenant@sakani.com',
-                                  password: '123456',
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _buildDemoChip(
-                                  icon: Icons.apartment_rounded,
-                                  label: 'مالك عقار',
-                                  email: 'owner@sakani.com',
-                                  password: '123456',
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
 
                       // ── Login Form Card ──
                       Container(
@@ -365,44 +314,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildDemoChip({
-    required IconData icon,
-    required String label,
-    required String email,
-    required String password,
-  }) {
-    return BouncingTap(
-      scaleFactor: 0.95,
-      onTap: () => _fillDemoAccount(email, password),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: context.cardColor,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: context.accentColor.withValues(alpha: 0.35),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 15, color: context.accentColor),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: context.textPrimary,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
