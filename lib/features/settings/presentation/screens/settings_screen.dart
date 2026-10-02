@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,6 +17,7 @@ import 'package:sakani/features/settings/presentation/providers/theme_provider.d
 import 'package:sakani/features/wallet/data/services/wallet_service.dart';
 import 'package:sakani/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:sakani/core/services/biometric_service.dart';
+import 'package:sakani/features/support/presentation/screens/support_chat_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   final bool isEmbedded;
@@ -195,9 +198,14 @@ class SettingsScreen extends StatelessWidget {
                 _SettingTile(
                   icon: Icons.support_agent_rounded,
                   iconColor: Colors.teal,
-                  title: 'مركز المساعدة والدعم الفني',
-                  subtitle: 'تواصل معنا مباشرة عبر المحادثة أو الهاتف',
-                  onTap: () => _showSupportDialog(context),
+                  title: 'الدعم الفني المباشر (Live Support 🎧)',
+                  subtitle: 'محادثة حية فورية ومتابعة مع موظفي الشيفت',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+                    );
+                  },
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -528,8 +536,9 @@ class SettingsScreen extends StatelessWidget {
               subtitle: const Text('متاح على مدار 24 ساعة'),
               onTap: () {
                 Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('جاري بدء المحادثة مع الدعم الفني...')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SupportChatScreen()),
                 );
               },
             ),

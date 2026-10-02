@@ -84,6 +84,12 @@ class ApiConfig {
   static String roomMessages(String roomId) => '$baseUrl/chat/rooms/$roomId/messages';
   static String sendMessage(String roomId) => '$baseUrl/chat/rooms/$roomId/messages';
 
+  // Support & Dashboard endpoints
+  static String get supportTickets => '$baseUrl/support/tickets';
+  static String userSupportTickets(String userId) => '$baseUrl/support/tickets/user/$userId';
+  static String ticketMessages(String ticketId) => '$baseUrl/support/tickets/$ticketId/messages';
+  static String sendTicketMessage(String ticketId) => '$baseUrl/support/tickets/$ticketId/messages';
+
   // Constants
   static String get constants => '$baseUrl/constants';
 }
