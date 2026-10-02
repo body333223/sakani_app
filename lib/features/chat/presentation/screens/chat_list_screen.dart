@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/features/chat/data/models/chat_message.dart';
 import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/chat/presentation/providers/chat_provider.dart';
 import 'package:sakani/core/widgets/empty_state.dart';
 import 'package:sakani/core/widgets/glass_card.dart';
@@ -22,7 +24,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = context.read<AuthProvider>().user?.uid;
+      final userId = context.read<AuthCubit>().currentUser?.uid ??
+          context.read<AuthProvider>().user?.uid ??
+          AuthService.currentUser?.uid;
       if (userId != null && mounted) {
         context.read<ChatProvider>().loadRooms(userId);
       }
@@ -81,8 +85,10 @@ class _ChatRoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.read<AuthProvider>();
-    final isOwner = auth.user?.uid == room.ownerId;
+    final myUid = context.read<AuthCubit>().currentUser?.uid ??
+        context.read<AuthProvider>().user?.uid ??
+        AuthService.currentUser?.uid;
+    final isOwner = myUid == room.ownerId;
     final otherName = isOwner ? room.tenantName : room.ownerName;
     final initial = otherName.isNotEmpty ? otherName[0] : '?';
 

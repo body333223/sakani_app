@@ -9,6 +9,7 @@ import 'package:sakani/core/widgets/gradient_button.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/chat/presentation/providers/chat_provider.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 
@@ -601,7 +602,9 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
 
   Future<void> _openChat(BuildContext context) async {
     final authCubit = context.read<AuthCubit>();
-    final user = authCubit.currentUser ?? context.read<AuthProvider>().user;
+    final user = authCubit.currentUser ??
+        context.read<AuthProvider>().user ??
+        AuthService.currentUser;
     if (user == null) {
       AppSnackbar.show(
         context,

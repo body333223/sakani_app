@@ -49,6 +49,7 @@ class AppCachedImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
+        cacheWidth: 600,
         errorBuilder: (_, _, _) => _buildAssetFallback(),
       );
     } else {
@@ -57,7 +58,11 @@ class AppCachedImage extends StatelessWidget {
         width: width,
         height: height,
         fit: fit,
-        fadeInDuration: const Duration(milliseconds: 300),
+        memCacheWidth: 600,
+        memCacheHeight: 450,
+        maxWidthDiskCache: 1000,
+        maxHeightDiskCache: 750,
+        fadeInDuration: const Duration(milliseconds: 200),
         placeholder: (context, url) => _buildShimmer(context),
         errorWidget: (context, url, error) => _buildAssetFallback(),
       );

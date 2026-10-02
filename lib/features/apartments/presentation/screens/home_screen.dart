@@ -9,7 +9,6 @@ import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.da
 import 'package:sakani/features/apartments/presentation/cubit/apartment_state.dart';
 import 'package:sakani/features/apartments/presentation/widgets/apartment_card.dart';
 import 'package:sakani/features/apartments/presentation/widgets/featured_carousel.dart';
-import 'package:sakani/features/apartments/presentation/widgets/city_filter_bar.dart';
 import 'package:sakani/features/apartments/presentation/widgets/filter_bottom_sheet.dart';
 import 'package:sakani/features/apartments/presentation/widgets/quick_sort_bar.dart';
 import 'package:sakani/core/widgets/luxury_nav_bar.dart';
@@ -99,8 +98,6 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
     return BlocBuilder<ApartmentCubit, ApartmentState>(
       builder: (context, state) {
         final allApartments = state.apartments;
-        final cities = allApartments.map((a) => a.city).toSet().toList();
-
         final filtered = state.filteredApartments.where((apt) {
           if (_searchQuery.isEmpty) return true;
           final q = _searchQuery.toLowerCase();
@@ -262,16 +259,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
               ),
             ),
 
-            // City Filter Chips
-            CityFilterBar(
-              cities: cities,
-              selectedCity: state.selectedCity,
-              onCitySelected: (city) => context.read<ApartmentCubit>().setFilter(
-                    city: city,
-                    maxPrice: state.maxPrice,
-                  ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
 
             // Quick Sorting Pills
             QuickSortBar(
@@ -375,15 +363,12 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                 final aptModel = aptEntity is ApartmentModel
                                     ? aptEntity
                                     : ApartmentModel.fromEntity(aptEntity);
-                                return StaggeredEntrance(
-                                  index: actualIndex.clamp(0, 6),
-                                  child: ApartmentCard(
-                                    apartment: aptModel,
-                                    onTap: () => Navigator.pushNamed(
-                                      context,
-                                      '/apartment-detail',
-                                      arguments: aptModel,
-                                    ),
+                                return ApartmentCard(
+                                  apartment: aptModel,
+                                  onTap: () => Navigator.pushNamed(
+                                    context,
+                                    '/apartment-detail',
+                                    arguments: aptModel,
                                   ),
                                 );
                               },

@@ -13,7 +13,7 @@ class AuthService {
   static AppUser? _currentUser;
 
   Stream<AppUser?> get authStateChanges => _authStateController.stream;
-  AppUser? get currentUser => _currentUser;
+  static AppUser? get currentUser => _currentUser;
 
   /// تهيئة الجلسة واسترجاع بيانات المستخدم المشفرة
   static void initializeSession() {

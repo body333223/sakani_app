@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/features/chat/data/models/chat_message.dart';
 import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/chat/presentation/providers/chat_provider.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -37,12 +39,20 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
-    final user = context.read<AuthProvider>().user;
-    if (user == null) return;
+
+    final cubitUser = context.read<AuthCubit>().currentUser;
+    final providerUser = context.read<AuthProvider>().user;
+    final fallbackUser = AuthService.currentUser;
+
+    final userId = cubitUser?.uid ?? providerUser?.uid ?? fallbackUser?.uid ?? '';
+    final userName = cubitUser?.name ?? providerUser?.name ?? fallbackUser?.name ?? 'مستخدم سكني';
+
+    if (userId.isEmpty) return;
+
     context.read<ChatProvider>().sendMessage(
       roomId: widget.room.id,
-      senderId: user.uid,
-      senderName: user.name,
+      senderId: userId,
+      senderName: userName,
       text: text,
     );
     _controller.clear();
@@ -63,8 +73,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.read<AuthProvider>();
-    final isOwner = auth.user?.uid == widget.room.ownerId;
+    final cubitUser = context.read<AuthCubit>().currentUser;
+    final myUid = cubitUser?.uid ?? context.read<AuthProvider>().user?.uid ?? AuthService.currentUser?.uid;
+    final isOwner = myUid == widget.room.ownerId;
     final otherName = isOwner ? widget.room.tenantName : widget.room.ownerName;
     final initial = otherName.isNotEmpty ? otherName[0] : '?';
 
@@ -141,7 +152,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemCount: chat.messages.length,
                   itemBuilder: (context, index) {
                     final msg = chat.messages[index];
-                    final isMe = msg.senderId == auth.user?.uid;
+                    final isMe = msg.senderId == myUid;
                     return _MessageBubble(message: msg, isMe: isMe);
                   },
                 );
