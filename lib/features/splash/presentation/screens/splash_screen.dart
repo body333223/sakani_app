@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     final authCubit = context.read<AuthCubit>();
     final isAuthInCubit = authCubit.state is Authenticated;
-    final isAuthInService = AuthService().currentUser != null;
+    final isAuthInService = AuthService.currentUser != null;
 
     if (isAuthInCubit || isAuthInService) {
       Navigator.pushReplacementNamed(context, '/home');

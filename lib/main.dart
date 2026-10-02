@@ -167,7 +167,7 @@ class HomeRouter extends StatelessWidget {
         }
 
         // Fallback: check AuthService directly
-        final directUser = AuthService().currentUser;
+        final directUser = AuthService.currentUser;
         if (directUser != null) {
           if (directUser.role == 'owner') {
             return const OwnerDashboardScreen();
