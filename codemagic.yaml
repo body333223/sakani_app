@@ -17,14 +17,19 @@ workflows:
           rm -f ios/Flutter/Generated.xcconfig
           flutter precache --ios
 
-      - name: Build iOS IPA
+      - name: Build iOS App
         script: |
-          flutter build ipa --release --no-codesign
+          flutter build ios --release --no-codesign
 
       - name: Package Unsigned IPA
         script: |
           mkdir -p build/ios/ipa
-          if [ -d "build/ios/archive/Runner.xcarchive" ]; then
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            cd build/ios/iphoneos
+            mkdir -p Payload
+            cp -r Runner.app Payload/
+            zip -r ../../../build/ios/ipa/sakani_app.ipa Payload
+          elif [ -d "build/ios/archive/Runner.xcarchive" ]; then
             cd build/ios/archive/Runner.xcarchive/Products/Applications
             mkdir -p Payload
             cp -r Runner.app Payload/
