@@ -11,11 +11,15 @@ workflows:
       events:
         - push
         - tag
-      branches:
-        - main
-        - master
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+        - pattern: 'master'
+          include: true
+          source: true
     scripts:
-      - name: Get Flutter dependencies
+      - name: Get Flutter packages
         script: |
           flutter packages pub get
 
@@ -25,11 +29,11 @@ workflows:
           flutter precache --ios
           cd ios && pod install --repo-update && cd ..
 
-      - name: Build iOS Release App
+      - name: Build iOS App
         script: |
           flutter build ios --release --no-codesign
 
-      - name: Package Unsigned IPA (Payload)
+      - name: Package Unsigned IPA
         script: |
           mkdir -p build/ios/ipa
           if [ -d "build/ios/iphoneos/Runner.app" ]; then
@@ -37,18 +41,15 @@ workflows:
             mkdir -p Payload
             cp -r Runner.app Payload/
             zip -r ../../../build/ios/ipa/sakani_app.ipa Payload
-            cp ../../../build/ios/ipa/sakani_app.ipa ../../../sakani_app.ipa
           elif [ -d "build/ios/archive/Runner.xcarchive" ]; then
             cd build/ios/archive/Runner.xcarchive/Products/Applications
             mkdir -p Payload
             cp -r Runner.app Payload/
-            zip -r ../../../../build/ios/ipa/sakani_app.ipa Payload
-            cp ../../../../build/ios/ipa/sakani_app.ipa ../../../../sakani_app.ipa
+            zip -r ../../../../ipa/sakani_app.ipa Payload
           fi
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - sakani_app.ipa
       - /tmp/xcodebuild_logs/*.log
       - flutter_drive.log
 
@@ -59,4 +60,3 @@ workflows:
         notify:
           success: true
           failure: true
-
