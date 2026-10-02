@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/utils/page_transitions.dart';
@@ -16,11 +17,46 @@ class FeaturedCarousel extends StatefulWidget {
 }
 
 class _FeaturedCarouselState extends State<FeaturedCarousel> {
-  final PageController _pageController = PageController(viewportFraction: 0.90);
+  late final PageController _pageController;
   int _currentPage = 0;
+  Timer? _autoPlayTimer;
+  double _pageOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: 0.88);
+    _pageController.addListener(() {
+      if (_pageController.page != null) {
+        setState(() {
+          _pageOffset = _pageController.page!;
+        });
+      }
+    });
+    _startAutoPlay();
+  }
+
+  void _startAutoPlay() {
+    _autoPlayTimer?.cancel();
+    if (widget.apartments.length <= 1) return;
+    _autoPlayTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || !_pageController.hasClients) return;
+      final nextPage = (_currentPage + 1) % widget.apartments.length;
+      _pageController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  void _stopAutoPlay() {
+    _autoPlayTimer?.cancel();
+  }
 
   @override
   void dispose() {
+    _autoPlayTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -32,6 +68,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header Row
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Row(
@@ -89,40 +126,78 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
             ],
           ),
         ),
+
+        // Carousel Slider with 3D Depth
         SizedBox(
-          height: 230,
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: widget.apartments.length,
-            onPageChanged: (index) => setState(() => _currentPage = index),
-            itemBuilder: (context, index) {
-              final apt = widget.apartments[index];
-              return _buildCarouselItem(context, apt);
+          height: 236,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollStartNotification) {
+                _stopAutoPlay();
+              } else if (notification is ScrollEndNotification) {
+                _startAutoPlay();
+              }
+              return false;
             },
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: widget.apartments.length,
+              onPageChanged: (index) => setState(() => _currentPage = index),
+              itemBuilder: (context, index) {
+                final apt = widget.apartments[index];
+                final diff = (index - _pageOffset);
+                final scale = (1 - (diff.abs() * 0.1)).clamp(0.90, 1.0);
+                final opacity = (1 - (diff.abs() * 0.25)).clamp(0.75, 1.0);
+
+                return Transform.scale(
+                  scale: scale,
+                  child: Opacity(
+                    opacity: opacity,
+                    child: _buildCarouselItem(context, apt),
+                  ),
+                );
+              },
+            ),
           ),
         ),
-        const SizedBox(height: 10),
-        // Indicators
+
+        const SizedBox(height: 12),
+
+        // Modern Pill Indicators
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             widget.apartments.length,
-            (index) => AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeOutCubic,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: _currentPage == index ? 24 : 6,
-              height: 5,
-              decoration: BoxDecoration(
-                gradient: _currentPage == index
-                    ? LinearGradient(
-                        colors: [context.accentColor, AppColors.goldDark],
-                      )
-                    : null,
-                color: _currentPage == index ? null : context.borderColor,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
+            (index) {
+              final isActive = _currentPage == index;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: isActive ? 26 : 6,
+                height: 5.5,
+                decoration: BoxDecoration(
+                  gradient: isActive
+                      ? LinearGradient(
+                          colors: [context.accentColor, AppColors.goldDark],
+                        )
+                      : null,
+                  color: isActive
+                      ? null
+                      : (context.isDark ? Colors.white24 : Colors.black12),
+                  borderRadius: BorderRadius.circular(4),
+                  boxShadow: isActive
+                      ? [
+                          BoxShadow(
+                            color: context.accentColor.withValues(alpha: 0.4),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -141,12 +216,12 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.25),
+              color: Colors.black.withValues(alpha: 0.28),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -162,21 +237,23 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
               fit: BoxFit.cover,
             ),
 
-            // Gradient Overlay
+            // Cinematic Gradient Overlays
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.15),
+                    Colors.black.withValues(alpha: 0.25),
+                    Colors.transparent,
                     Colors.black.withValues(alpha: 0.88),
                   ],
+                  stops: const [0.0, 0.45, 1.0],
                 ),
               ),
             ),
 
-            // Top Badges
+            // Top Right: Exclusive Tag
             Positioned(
               top: 14,
               right: 14,
@@ -212,7 +289,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
               ),
             ),
 
-            // Top Left Rating Badge
+            // Top Left: Rating Badge
             Positioned(
               top: 14,
               left: 14,
@@ -241,121 +318,95 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
               ),
             ),
 
-            // Bottom Info
+            // Bottom Info: Title, City, and Floating Price Tag
             Positioned(
               bottom: 14,
               left: 14,
               right: 14,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Row(
-                    children: [
-                      Icon(Icons.location_on_rounded, size: 14, color: context.accentColor),
-                      const SizedBox(width: 4),
-                      Text(
-                        apt.city,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          color: Colors.white38,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${apt.bedrooms} غرف • ${apt.area.round()} م²',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    apt.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '${apt.monthlyPrice.round()}',
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                            ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          apt.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            shadows: [
+                              Shadow(color: Colors.black54, blurRadius: 4),
+                            ],
                           ),
-                          const SizedBox(width: 3),
-                          Text(
-                            'ج.م',
-                            style: TextStyle(
-                              color: context.accentColor,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const Text(
-                            ' / شهري',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white24),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
+                        const SizedBox(height: 4),
+                        Row(
                           children: [
-                            Text(
-                              'تفاصيل الشقة',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            SizedBox(width: 4),
                             Icon(
-                              Icons.arrow_forward_rounded,
+                              Icons.location_on_rounded,
                               size: 13,
-                              color: Colors.white,
+                              color: context.accentColor,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${apt.city} • ${apt.address}',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Floating Price Tag
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: context.cardColor.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.accentColor.withValues(alpha: 0.4),
                       ),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${apt.monthlyPrice.round()}',
+                          style: TextStyle(
+                            color: context.accentColor,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          'ج.م',
+                          style: TextStyle(
+                            color: context.textPrimary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

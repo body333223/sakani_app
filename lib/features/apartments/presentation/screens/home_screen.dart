@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/core/widgets/empty_state.dart';
 import 'package:sakani/core/widgets/shimmer_loading.dart';
+import 'package:sakani/core/widgets/notifications_bottom_sheet.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_state.dart';
@@ -14,6 +17,10 @@ import 'package:sakani/features/apartments/presentation/widgets/quick_sort_bar.d
 import 'package:sakani/core/widgets/luxury_nav_bar.dart';
 import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dart';
 import 'package:sakani/features/apartments/presentation/screens/wishlist_screen.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_state.dart';
+import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/bookings/presentation/screens/my_bookings_screen.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
@@ -48,6 +55,17 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
   Widget build(BuildContext context) {
     final lang = context.watch<LocaleProvider>().lang;
     final tr = AppLocalizations(lang);
+    final auth = context.watch<AuthProvider>();
+    final authCubit = context.watch<AuthCubit>();
+    final authState = authCubit.state;
+    final user = authCubit.currentUser ??
+        (authState is Authenticated ? authState.user : null) ??
+        auth.user ??
+        AuthService.currentUser;
+    final userPhoto = user?.photoUrl;
+    final userName = user?.name;
+    final hasUserPhoto = userPhoto != null && userPhoto.isNotEmpty;
+    final hasUserName = userName != null && userName.isNotEmpty;
 
     final List<Widget> pages = [
       _buildExploreTab(tr),
@@ -67,28 +85,163 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
 
     return Scaffold(
       extendBody: true,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          titles[_currentIndex],
-          style: TextStyle(
-            color: context.textPrimary,
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        actions: _currentIndex == 0
-            ? [
-                IconButton(
-                  icon: Icon(
-                    Icons.chat_bubble_outline_rounded,
-                    color: context.accentColor,
+      appBar: _currentIndex == 0
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(68),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Row(
+                      children: [
+                        // ── Profile Avatar with Photo on RIGHT ──
+                        GestureDetector(
+                          onTap: () => setState(() => _currentIndex = 4),
+                          child: Container(
+                            padding: const EdgeInsets.all(2.5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(
+                                colors: [context.accentColor, AppColors.goldDark],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: context.accentColor.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 20,
+                              backgroundColor: context.surfaceColor,
+                              backgroundImage: hasUserPhoto
+                                  ? (userPhoto.startsWith('http')
+                                      ? CachedNetworkImageProvider(userPhoto)
+                                      : FileImage(File(userPhoto)) as ImageProvider)
+                                  : null,
+                              child: !hasUserPhoto
+                                  ? Text(
+                                      hasUserName
+                                          ? userName[0].toUpperCase()
+                                          : 'س',
+                                      style: TextStyle(
+                                        color: context.accentColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        // ── Greeting & Welcome ──
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      'مرحباً، ${hasUserName ? userName.split(' ').first : "بك"}',
+                                      style: TextStyle(
+                                        color: context.textPrimary,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text('👋', style: TextStyle(fontSize: 14)),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'ابحث عن شقتك المثالية',
+                                style: TextStyle(
+                                  color: context.textSecondary.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // ── Notifications on LEFT ──
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: context.cardColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: context.borderColor,
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: context.isDark ? 0.2 : 0.04,
+                                    ),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.notifications_outlined,
+                                  color: context.accentColor,
+                                  size: 22,
+                                ),
+                                onPressed: () => NotificationsBottomSheet.show(context),
+                                tooltip: 'الإشعارات',
+                              ),
+                            ),
+                            Positioned(
+                              top: 6,
+                              left: 6,
+                              child: Container(
+                                width: 9,
+                                height: 9,
+                                decoration: BoxDecoration(
+                                  color: AppColors.error,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: context.surfaceColor,
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  onPressed: () => setState(() => _currentIndex = 3),
                 ),
-              ]
-            : null,
-      ),
+              ),
+            )
+          : AppBar(
+              automaticallyImplyLeading: false,
+              title: Text(
+                titles[_currentIndex],
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: _buildBottomNav(tr),
     );

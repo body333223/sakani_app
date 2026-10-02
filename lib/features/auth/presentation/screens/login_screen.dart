@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/config/theme.dart';
+import 'package:sakani/core/services/biometric_service.dart';
 import 'package:sakani/core/widgets/app_snackbar.dart';
 import 'package:sakani/core/widgets/staggered_entrance.dart';
 import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
@@ -19,6 +20,31 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtl = TextEditingController();
   final _passwordCtl = TextEditingController();
   bool _obscurePassword = true;
+  bool _rememberMe = true;
+  bool _isBiometricSupported = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initBiometricsAndRememberMe();
+  }
+
+  Future<void> _initBiometricsAndRememberMe() async {
+    final isRemember = BiometricService.isRememberMeEnabled();
+    final saved = BiometricService.getSavedCredentials();
+    final supported = await BiometricService.isBiometricsSupported();
+
+    if (mounted) {
+      setState(() {
+        _rememberMe = isRemember;
+        _isBiometricSupported = supported;
+        if (saved != null && isRemember) {
+          _emailCtl.text = saved['email'] ?? '';
+          _passwordCtl.text = saved['password'] ?? '';
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -35,6 +61,33 @@ class _LoginScreenState extends State<LoginScreen> {
         );
   }
 
+  Future<void> _loginWithBiometrics() async {
+    final saved = BiometricService.getSavedCredentials();
+    if (saved == null) {
+      AppSnackbar.show(
+        context,
+        message: 'يرجى تسجيل الدخول يدوياً أولاً مع تفعيل خيار "تذكرني" لحفظ البصمة',
+        type: ToastType.warning,
+      );
+      return;
+    }
+
+    final authenticated = await BiometricService.authenticate(
+      reason: 'يرجى استخدام بصمة الإصبع أو Face ID لتسجيل الدخول السريع',
+    );
+
+    if (authenticated && mounted) {
+      _emailCtl.text = saved['email']!;
+      _passwordCtl.text = saved['password']!;
+      AppSnackbar.show(
+        context,
+        message: 'تم التحقق من البصمة بنجاح! جاري تسجيل الدخول... 🌟',
+        type: ToastType.success,
+      );
+      context.read<AuthCubit>().login(saved['email']!, saved['password']!);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LocaleProvider>().lang;
@@ -45,6 +98,14 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
+            if (_rememberMe) {
+              BiometricService.saveCredentials(
+                email: _emailCtl.text.trim(),
+                password: _passwordCtl.text,
+              );
+            } else {
+              BiometricService.clearSavedCredentials();
+            }
             AppSnackbar.show(
               context,
               message: 'مرحباً بك، ${state.user.name.isNotEmpty ? state.user.name : "في سكني"}',
@@ -144,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Image.asset(
                             'assets/images/app_logo.jpg',
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
+                            errorBuilder: (context, error, stackTrace) => Container(
                               color: context.accentColor,
                               child: const Icon(Icons.apartment_rounded, color: Colors.white, size: 40),
                             ),
@@ -169,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: context.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
 
                       // ── Login Form Card ──
                       Container(
@@ -229,7 +290,45 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? null
                                   : 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 14),
+
+                            // ── Remember Me ("تذكرني") Option ──
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: Checkbox(
+                                    value: _rememberMe,
+                                    activeColor: context.accentColor,
+                                    checkColor: Colors.black,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    onChanged: (val) {
+                                      setState(() => _rememberMe = val ?? false);
+                                      BiometricService.setRememberMe(_rememberMe);
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() => _rememberMe = !_rememberMe);
+                                    BiometricService.setRememberMe(_rememberMe);
+                                  },
+                                  child: Text(
+                                    'تذكر بيانات الدخول',
+                                    style: TextStyle(
+                                      color: context.textPrimary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
 
                             // Submit Button
                             BouncingTap(
@@ -280,6 +379,70 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                             ),
+
+                            // ── Biometric Fingerprint Button ──
+                            if (_isBiometricSupported) ...[
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(child: Divider(color: context.borderColor)),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    child: Text(
+                                      'أو الدخول السريع',
+                                      style: TextStyle(
+                                        color: context.textSecondary.withValues(alpha: 0.7),
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(child: Divider(color: context.borderColor)),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              BouncingTap(
+                                scaleFactor: 0.97,
+                                onTap: isLoading ? null : _loginWithBiometrics,
+                                child: Container(
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: context.cardColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: context.accentColor.withValues(alpha: 0.45),
+                                      width: 1.2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: context.accentColor.withValues(alpha: 0.08),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.fingerprint_rounded,
+                                        color: context.accentColor,
+                                        size: 26,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'تسجيل الدخول بالبصمة / Face ID',
+                                        style: TextStyle(
+                                          color: context.textPrimary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -300,8 +463,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               'إنشاء حساب جديد',
                               style: TextStyle(
                                 color: context.accentColor,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13.5,
                               ),
                             ),
                           ),
@@ -318,11 +481,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildInputLabel(String label) {
+  Widget _buildInputLabel(String text) {
     return Text(
-      label,
+      text,
       style: TextStyle(
-        fontSize: 12.5,
+        fontSize: 13,
         fontWeight: FontWeight.w700,
         color: context.textPrimary,
       ),
@@ -333,39 +496,49 @@ class _LoginScreenState extends State<LoginScreen> {
     required TextEditingController controller,
     required String hint,
     required IconData prefixIcon,
+    TextInputType keyboardType = TextInputType.text,
     bool obscureText = false,
     Widget? suffixIcon,
-    TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.borderColor),
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      validator: validator,
+      style: TextStyle(
+        color: context.textPrimary,
+        fontSize: 14.5,
+        fontWeight: FontWeight.w600,
       ),
-      child: TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        validator: validator,
-        style: TextStyle(
-          color: context.textPrimary,
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(
+          color: context.textSecondary.withValues(alpha: 0.6),
+          fontSize: 13.5,
         ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(
-            color: context.textSecondary.withValues(alpha: 0.6),
-            fontSize: 13,
-          ),
-          prefixIcon: Icon(prefixIcon, color: context.accentColor, size: 20),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        prefixIcon: Icon(prefixIcon, color: context.accentColor, size: 20),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: context.isDark
+            ? Colors.white.withValues(alpha: 0.04)
+            : const Color(0xFFF1F5F9),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: context.borderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: context.borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: context.accentColor, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
       ),
     );

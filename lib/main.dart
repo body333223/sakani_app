@@ -35,9 +35,11 @@ import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dar
 import 'package:sakani/features/bookings/presentation/cubit/booking_cubit.dart';
 import 'package:sakani/features/chat/presentation/cubit/chat_cubit.dart';
 import 'package:sakani/features/auth/data/services/auth_service.dart';
+import 'package:sakani/core/security/secure_storage_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SecureStorageService.init();
   await initDependencies();
   AuthService.initializeSession();
   runApp(const SakaniApp());

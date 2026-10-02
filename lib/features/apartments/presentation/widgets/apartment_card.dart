@@ -26,6 +26,7 @@ class _ApartmentCardState extends State<ApartmentCard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _heartController;
   late final Animation<double> _heartScale;
+  int _currentImageIndex = 0;
 
   @override
   void initState() {
@@ -34,14 +35,13 @@ class _ApartmentCardState extends State<ApartmentCard>
       vsync: this,
       duration: const Duration(milliseconds: 260),
     );
-    _heartScale =
-        TweenSequence<double>([
-          TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.45), weight: 40),
-          TweenSequenceItem(tween: Tween(begin: 1.45, end: 0.85), weight: 30),
-          TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.0), weight: 30),
-        ]).animate(
-          CurvedAnimation(parent: _heartController, curve: Curves.easeInOut),
-        );
+    _heartScale = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.45), weight: 40),
+      TweenSequenceItem(tween: Tween(begin: 1.45, end: 0.85), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.85, end: 1.0), weight: 30),
+    ]).animate(
+      CurvedAnimation(parent: _heartController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -60,11 +60,12 @@ class _ApartmentCardState extends State<ApartmentCard>
     final apt = widget.apartment;
     final isFavorite = context.watch<WishlistCubit>().isFavorite(apt.id);
     final isDark = context.isDark;
+    final hasMultipleImages = apt.images.length > 1;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: BouncingTap(
-        scaleFactor: 0.97,
+        scaleFactor: 0.98,
         onTap: widget.onTap,
         child: Container(
           decoration: BoxDecoration(
@@ -94,22 +95,34 @@ class _ApartmentCardState extends State<ApartmentCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ── Image Section with Badges ──
+              // ── Interactive Image Section with Badges ──
               Stack(
                 children: [
-                  Hero(
-                    tag: 'apartment_${apt.id}',
-                    child: Container(
-                      height: 215,
-                      width: double.infinity,
-                      color: context.cardColor,
-                      child: AppCachedImage(
-                        imageUrl: apt.images.isNotEmpty ? apt.images[0] : '',
-                        height: 215,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
+                  Container(
+                    height: 220,
+                    width: double.infinity,
+                    color: context.cardColor,
+                    child: hasMultipleImages
+                        ? PageView.builder(
+                            itemCount: apt.images.length,
+                            onPageChanged: (i) =>
+                                setState(() => _currentImageIndex = i),
+                            itemBuilder: (context, index) {
+                              return AppCachedImage(
+                                imageUrl: apt.images[index],
+                                height: 220,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              );
+                            },
+                          )
+                        : AppCachedImage(
+                            imageUrl:
+                                apt.images.isNotEmpty ? apt.images[0] : '',
+                            height: 220,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                   ),
 
                   // Top gradient for badge contrast
@@ -124,7 +137,7 @@ class _ApartmentCardState extends State<ApartmentCard>
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.6),
+                            Colors.black.withValues(alpha: 0.65),
                             Colors.transparent,
                           ],
                         ),
@@ -132,19 +145,19 @@ class _ApartmentCardState extends State<ApartmentCard>
                     ),
                   ),
 
-                  // Bottom gradient for location badge contrast
+                  // Bottom gradient for location and dot contrast
                   Positioned(
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    height: 60,
+                    height: 70,
                     child: Container(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.65),
+                            Colors.black.withValues(alpha: 0.75),
                             Colors.transparent,
                           ],
                         ),
@@ -209,9 +222,7 @@ class _ApartmentCardState extends State<ApartmentCard>
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF0F172A,
-                            ).withValues(alpha: 0.7),
+                            color: const Color(0xFF0F172A).withValues(alpha: 0.7),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.25),
@@ -237,7 +248,7 @@ class _ApartmentCardState extends State<ApartmentCard>
                     ),
                   ),
 
-                  // ── City & Photo Count on Bottom of Image ──
+                  // ── City & Address on Bottom Right ──
                   Positioned(
                     bottom: 12,
                     right: 14,
@@ -275,7 +286,38 @@ class _ApartmentCardState extends State<ApartmentCard>
                     ),
                   ),
 
-                  if (apt.images.length > 1)
+                  // ── Mini Indicator Dots (Center Bottom) ──
+                  if (hasMultipleImages)
+                    Positioned(
+                      bottom: 14,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          apt.images.length.clamp(0, 6),
+                          (dotIndex) {
+                            final isActive = _currentImageIndex == dotIndex;
+                            return AnimatedContainer(
+                              duration: const Duration(milliseconds: 250),
+                              curve: Curves.easeOutCubic,
+                              margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                              width: isActive ? 14 : 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: isActive
+                                    ? Colors.white
+                                    : Colors.white.withValues(alpha: 0.45),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                  // ── Photo Counter Badge (Bottom Left) ──
+                  if (hasMultipleImages)
                     Positioned(
                       bottom: 12,
                       left: 14,
@@ -287,6 +329,9 @@ class _ApartmentCardState extends State<ApartmentCard>
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.2),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -294,11 +339,11 @@ class _ApartmentCardState extends State<ApartmentCard>
                             const Icon(
                               Icons.photo_library_outlined,
                               size: 12,
-                              color: Colors.white70,
+                              color: Colors.white,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              '${apt.images.length}',
+                              '${_currentImageIndex + 1}/${apt.images.length}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
