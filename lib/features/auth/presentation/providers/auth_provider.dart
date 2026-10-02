@@ -16,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isTenant => _user?.role == 'tenant';
 
   AuthProvider() {
-    _user = _authService.currentUser;
+    _user = AuthService.currentUser;
     _authService.authStateChanges.listen((appUser) {
       _user = appUser;
       notifyListeners();
