@@ -35,6 +35,26 @@ def get_lan_ip():
     except Exception:
         return '127.0.0.1'
 
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.8)
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+def cleanup_stale_processes():
+    """Kill old leftover ngrok or port 5093 processes to avoid port-binding collisions."""
+    if sys.platform == 'win32':
+        try:
+            subprocess.run(['taskkill', '/F', '/IM', 'ngrok.exe'], capture_output=True)
+            if is_port_in_use(5093):
+                netstat_out = subprocess.run(['netstat', '-ano'], capture_output=True, text=True).stdout
+                for line in netstat_out.splitlines():
+                    if ':5093 ' in line and 'LISTENING' in line:
+                        pid = line.strip().split()[-1]
+                        subprocess.run(['taskkill', '/F', '/PID', pid], capture_output=True)
+                time.sleep(1)
+        except Exception:
+            pass
+
 def start_backend(dotnet_exe, dll_path, backend_dir, env, log_file):
     return subprocess.Popen(
         [dotnet_exe, dll_path, '--urls', 'http://0.0.0.0:5093'],
@@ -97,6 +117,11 @@ def main():
     print("=" * 72)
     print(f"[*] Backend DLL: {dll_path}")
 
+    # Check and clean up previous conflicting sessions
+    if is_port_in_use(5093):
+        print("[*] تنظيف جلسات سابقة كانت تحجز المنفذ 5093 لضمان التشغيل المستقر...")
+        cleanup_stale_processes()
+
     env = dict(os.environ)
     env['DOTNET_ROOT'] = r'C:\Users\pC\.dotnet'
     env['ASPNETCORE_ENVIRONMENT'] = 'Production'
@@ -109,7 +134,7 @@ def main():
     backend_proc = start_backend(dotnet_exe, dll_path, backend_dir, env, backend_log)
 
     # 2. Verify Backend Health
-    health_url = 'http://127.0.0.1:5093/'
+    health_url = 'http://127.0.0.1:5093/api/apartments'
     server_ready = False
     for _ in range(25):
         time.sleep(0.5)
@@ -157,6 +182,7 @@ def main():
 
             with open(api_config_file, 'w', encoding='utf-8') as f:
                 f.write(new_config_code)
+
             print(f"[OK] تم تأكيد ضبط api_config.dart على: {live_api_url}")
         except Exception as e:
             print(f"[!] خطأ أثناء فحص api_config.dart: {e}")
@@ -189,20 +215,37 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
+    backend_fails = 0
+    tunnel_fails = 0
+
     try:
         while True:
             time.sleep(2)
             # Auto-restart backend if terminated unexpectedly
             if backend_proc.poll() is not None:
-                print("[!] تنبيه: السيرفر الخلفي توقف، جاري إعادة تشغيله تلقائياً...")
-                backend_proc = start_backend(dotnet_exe, dll_path, backend_dir, env, backend_log)
-                time.sleep(1)
+                backend_fails += 1
+                if backend_fails > 5:
+                    print("[!] تنبيه: تكرر توقف السيرفر الخلفي. جاري الانتظار 5 ثوانٍ قبل إعادة المحاولة...")
+                    time.sleep(5)
+                else:
+                    print("[!] تنبيه: السيرفر الخلفي توقف، جاري إعادة تشغيله تلقائياً...")
+                    backend_proc = start_backend(dotnet_exe, dll_path, backend_dir, env, backend_log)
+                    time.sleep(1.5)
+            else:
+                backend_fails = 0
 
             # Auto-restart tunnel if terminated unexpectedly
             if tunnel_proc.poll() is not None:
-                print("[!] تنبيه: نفق الاتصال توقف، جاري إعادة تشغيله تلقائياً...")
-                tunnel_proc, _ = start_tunnel(ngrok_exe, cloudflared_exe, backend_dir, tunnel_log)
-                time.sleep(1)
+                tunnel_fails += 1
+                if tunnel_fails > 5:
+                    print("[!] تنبيه: نفق الاتصال توقف بشكل متكرر. جاري الانتظار 5 ثوانٍ قبل إعادة المحاولة...")
+                    time.sleep(5)
+                else:
+                    print("[!] تنبيه: نفق الاتصال توقف، جاري إعادة تشغيله تلقائياً...")
+                    tunnel_proc, _ = start_tunnel(ngrok_exe, cloudflared_exe, backend_dir, tunnel_log)
+                    time.sleep(1.5)
+            else:
+                tunnel_fails = 0
     except KeyboardInterrupt:
         signal_handler(None, None)
 
