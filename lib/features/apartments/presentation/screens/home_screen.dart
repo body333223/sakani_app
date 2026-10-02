@@ -92,10 +92,10 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Directionality(
-                    textDirection: TextDirection.rtl,
+                    textDirection: context.isArabic ? TextDirection.rtl : TextDirection.ltr,
                     child: Row(
                       children: [
-                        // ── Profile Avatar with Photo on RIGHT ──
+                        // ── Profile Avatar with Photo ──
                         GestureDetector(
                           onTap: () => setState(() => _currentIndex = 4),
                           child: Container(
@@ -127,7 +127,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                   ? Text(
                                       hasUserName
                                           ? userName[0].toUpperCase()
-                                          : 'س',
+                                          : (context.isArabic ? 'س' : 'S'),
                                       style: TextStyle(
                                         color: context.accentColor,
                                         fontWeight: FontWeight.bold,
@@ -149,10 +149,10 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                 children: [
                                   Flexible(
                                     child: Text(
-                                      'مرحباً، ${hasUserName ? userName.split(' ').first : "بك"}',
+                                      '${tr.tr('welcome')} ${hasUserName ? userName.split(' ').first : ""}'.trim(),
                                       style: TextStyle(
                                         color: context.textPrimary,
-                                        fontSize: 16,
+                                        fontSize: 15,
                                         fontWeight: FontWeight.w800,
                                       ),
                                       maxLines: 1,
@@ -165,17 +165,61 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'ابحث عن شقتك المثالية',
+                                tr.tr('findApartment'),
                                 style: TextStyle(
                                   color: context.textSecondary.withValues(alpha: 0.8),
-                                  fontSize: 12,
+                                  fontSize: 11.5,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        // ── Notifications on LEFT ──
+                        // ── Language Toggle Pill (AR / EN) ──
+                        GestureDetector(
+                          onTap: () => context.read<LocaleProvider>().toggleLang(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: context.cardColor,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: context.accentColor.withValues(alpha: 0.4),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: context.isDark ? 0.2 : 0.04,
+                                  ),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.translate_rounded,
+                                  color: context.accentColor,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  lang == 'ar' ? 'EN' : 'عربي',
+                                  style: TextStyle(
+                                    color: context.accentColor,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        // ── Notifications ──
                         Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -201,18 +245,20 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                 icon: Icon(
                                   Icons.notifications_outlined,
                                   color: context.accentColor,
-                                  size: 22,
+                                  size: 20,
                                 ),
                                 onPressed: () => NotificationsBottomSheet.show(context),
-                                tooltip: 'الإشعارات',
+                                tooltip: tr.tr('notifications'),
+                                constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                                padding: EdgeInsets.zero,
                               ),
                             ),
                             Positioned(
-                              top: 6,
-                              left: 6,
+                              top: 4,
+                              left: 4,
                               child: Container(
-                                width: 9,
-                                height: 9,
+                                width: 8,
+                                height: 8,
                                 decoration: BoxDecoration(
                                   color: AppColors.error,
                                   shape: BoxShape.circle,
@@ -224,6 +270,64 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(width: 6),
+                        // ── Interactive Map View Button ──
+                        Container(
+                          decoration: BoxDecoration(
+                            color: context.cardColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: context.borderColor,
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: context.isDark ? 0.2 : 0.04,
+                                ),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.map_outlined,
+                              color: context.accentColor,
+                              size: 20,
+                            ),
+                            onPressed: () => Navigator.pushNamed(context, '/apartments-map'),
+                            tooltip: tr.tr('interactiveMap'),
+                            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        // ── AI Property Assistant Button ──
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.gold,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.gold.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.auto_awesome,
+                              color: Color(0xFF080C14),
+                              size: 19,
+                            ),
+                            onPressed: () => Navigator.pushNamed(context, '/ai-assistant'),
+                            tooltip: tr.tr('aiAssistant'),
+                            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                            padding: EdgeInsets.zero,
+                          ),
                         ),
                       ],
                     ),
@@ -294,7 +398,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                         decoration: InputDecoration(
-                          hintText: 'ابحث عن مدينة، حي، أو مواصفات...',
+                          hintText: tr.tr('searchPlaceholder'),
                           hintStyle: TextStyle(
                             color: context.textSecondary.withValues(alpha: 0.65),
                             fontSize: 13.5,
@@ -445,8 +549,8 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                                   icon: Icons.holiday_village_outlined,
                                   title: tr.tr('noApartments'),
                                   subtitle: _searchQuery.isNotEmpty
-                                      ? 'جرب البحث بكلمات مختلفة أو تعديل خيارات الفلتر'
-                                      : 'لا توجد شقق مطابقة للبحث أو الفلتر المحدد',
+                                      ? tr.tr('noResults')
+                                      : tr.tr('noApartments'),
                                 ),
                               ],
                             )

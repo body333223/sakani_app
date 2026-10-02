@@ -24,21 +24,7 @@ class NotificationItem {
 class NotificationsBottomSheet extends StatefulWidget {
   const NotificationsBottomSheet({super.key});
 
-  static Future<void> show(BuildContext context) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const NotificationsBottomSheet(),
-    );
-  }
-
-  @override
-  State<NotificationsBottomSheet> createState() => _NotificationsBottomSheetState();
-}
-
-class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
-  final List<NotificationItem> _notifications = [
+  static final List<NotificationItem> _globalNotifications = [
     NotificationItem(
       id: '1',
       title: 'تم قبول طلب الحجز! 🎉',
@@ -76,6 +62,42 @@ class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
       isRead: true,
     ),
   ];
+
+  static void addNotification({
+    required String title,
+    required String body,
+    IconData icon = Icons.notifications_active_rounded,
+    Color? color,
+  }) {
+    _globalNotifications.insert(
+      0,
+      NotificationItem(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        title: title,
+        body: body,
+        time: 'الآن',
+        icon: icon,
+        color: color ?? AppColors.gold,
+        isRead: false,
+      ),
+    );
+  }
+
+  static Future<void> show(BuildContext context) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const NotificationsBottomSheet(),
+    );
+  }
+
+  @override
+  State<NotificationsBottomSheet> createState() => _NotificationsBottomSheetState();
+}
+
+class _NotificationsBottomSheetState extends State<NotificationsBottomSheet> {
+  List<NotificationItem> get _notifications => NotificationsBottomSheet._globalNotifications;
 
   void _markAllAsRead() {
     setState(() {

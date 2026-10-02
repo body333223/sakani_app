@@ -5,29 +5,29 @@ import 'package:google_fonts/google_fonts.dart';
 // ─── Color Palette ───────────────────────────────────────────────────────────
 
 class AppColors {
-  // ── Royal Warm Champagne Gold Accent Palette ──
-  static const Color gold = Color(0xFFF59E0B);          // Luminous Warm Champagne Gold
-  static const Color goldDark = Color(0xFFD97706);      // Deep Burnished Amber Gold
-  static const Color goldLight = Color(0xFFFDE68A);     // Soft Champagne Light Glow
-  static const Color goldBronze = Color(0xFFB45309);    // Rich Deep Bronze
+  // ── Royal Brushed Champagne Gold Accent Palette ──
+  static const Color gold = Color(0xFFE5A93C);          // Royal Champagne Satin Gold
+  static const Color goldDark = Color(0xFFC68A25);      // Deep Burnished Bronze Gold
+  static const Color goldLight = Color(0xFFFDE8B3);     // Soft Silk Champagne Glow
+  static const Color goldBronze = Color(0xFFA16207);    // Noble Deep Bronze
   static const Color goldShimmer = Color(0xFFFEF3C7);   // Sparkling Champagne Tint
 
   // ── Midnight Obsidian Dark Mode ──
-  static const Color darkBg = Color(0xFF080C14);        // Deepest Obsidian OLED Canvas
-  static const Color darkCard = Color(0xFF0F172A);      // Slate Obsidian Card
-  static const Color darkSurface = Color(0xFF162032);   // Elevated Slate-Navy Surface
-  static const Color darkBorder = Color(0xFF1E293B);    // Refined Border
-  static const Color darkBorderGold = Color(0x33F59E0B);// Subtle Gold Micro-Border
+  static const Color darkBg = Color(0xFF070A11);        // Deepest Obsidian Void Canvas
+  static const Color darkCard = Color(0xFF0D1322);      // Midnight Velvet Slate Card
+  static const Color darkSurface = Color(0xFF131B2F);   // Elevated Glass Slate Surface
+  static const Color darkBorder = Color(0xFF1C263A);    // Crisp Hairline Border
+  static const Color darkBorderGold = Color(0x30E5A93C);// Subtle Gold Micro-Border
 
-  // ── Pearl White Light Mode ──
+  // ── Pearl Porcelain Light Mode ──
   static const Color lightBg = Color(0xFFF8FAFC);       // Modern Pearl Porcelain Canvas
   static const Color lightCard = Color(0xFFFFFFFF);     // Pure Alabaster White Card
-  static const Color lightSurface = Color(0xFFF1F5F9);  // Soft Warm Pearl Surface
-  static const Color lightBorder = Color(0xFFE2E8F0);   // Clean Modern Border
-  static const Color lightBorderGold = Color(0x2BD97706);// Subtle Warm Amber Border
+  static const Color lightSurface = Color(0xFFF1F5F9);  // Soft Warm Silk Surface
+  static const Color lightBorder = Color(0xFFE2E8F0);   // Clean Modern Platinum Border
+  static const Color lightBorderGold = Color(0x28C68A25);// Subtle Warm Amber Border
 
   // ── Premium Typography Colors ──
-  static const Color textDark = Color(0xFF0F172A);              // Deep Obsidian Text
+  static const Color textDark = Color(0xFF0B101D);              // Deep Obsidian Text
   static const Color textDarkSecondary = Color(0xFF64748B);     // Cool Slate Gray Text
   static const Color textLight = Color(0xFFF8FAFC);             // Pure Pearl Light Text
   static const Color textLightSecondary = Color(0xFF94A3B8);    // Soft Silver Slate Text
@@ -73,32 +73,32 @@ class AppSpacing {
 class AppGradients {
   // Ultra-Rich Shimmering Champagne Gold Gradient
   static const LinearGradient gold = LinearGradient(
-    colors: [Color(0xFFFDE68A), Color(0xFFF59E0B), Color(0xFFD97706)],
+    colors: [Color(0xFFFDE8B3), Color(0xFFE5A93C), Color(0xFFC68A25)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient goldSubtle = LinearGradient(
-    colors: [Color(0xFFFDE68A), Color(0xFFF59E0B)],
+    colors: [Color(0xFFFDE8B3), Color(0xFFE5A93C)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
   static const LinearGradient goldLuxe = LinearGradient(
-    colors: [Color(0xFFFFFBEB), Color(0xFFFCD34D), Color(0xFFF59E0B)],
+    colors: [Color(0xFFFFFBEB), Color(0xFFFCD34D), Color(0xFFE5A93C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   // Modern Card Gradients (Subtle glass backdrop effect)
   static const LinearGradient darkCard = LinearGradient(
-    colors: [Color(0xFF151E33), Color(0xFF0F172A)],
+    colors: [Color(0xFF11182B), Color(0xFF0A0F1D)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient lightCard = LinearGradient(
-    colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+    colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFD)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -109,7 +109,7 @@ class AppGradients {
 
   // Solid background gradients
   static LinearGradient darkBg = const LinearGradient(
-    colors: [Color(0xFF080C14), Color(0xFF0F172A)],
+    colors: [Color(0xFF070A11), Color(0xFF0D1322)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );

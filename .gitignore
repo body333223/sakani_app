@@ -58,5 +58,8 @@ app.*.map.json
 secrets.json
 key.properties
 *.db
+*.ipa
+*.apk
+web_admin_build/
 *.sqlite
 *.enc

@@ -4,6 +4,10 @@ import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/utils/page_transitions.dart';
 import 'package:sakani/core/widgets/staggered_entrance.dart';
 import 'package:sakani/core/widgets/app_cached_image.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/screens/apartment_detail_screen.dart';
 
@@ -64,6 +68,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
   @override
   Widget build(BuildContext context) {
     if (widget.apartments.isEmpty) return const SizedBox.shrink();
+    final lang = context.watch<LocaleProvider>().lang;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +95,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'شقق مميزة ومختارة',
+                    lang == 'ar' ? 'شقق مميزة ومختارة' : 'Featured Residences',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -113,7 +118,7 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                     Icon(Icons.star_rounded, size: 14, color: context.accentColor),
                     const SizedBox(width: 4),
                     Text(
-                      'أعلى تقييماً',
+                      lang == 'ar' ? 'أعلى تقييماً' : 'Top Rated',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -205,6 +210,9 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
   }
 
   Widget _buildCarouselItem(BuildContext context, Apartment apt) {
+    final lang = context.watch<LocaleProvider>().lang;
+    final tr = AppLocalizations(lang);
+
     return BouncingTap(
       scaleFactor: 0.98,
       onTap: () {
@@ -271,14 +279,14 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 13),
-                    SizedBox(width: 4),
+                    const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 13),
+                    const SizedBox(width: 4),
                     Text(
-                      'عرض استثنائي',
-                      style: TextStyle(
+                      lang == 'ar' ? 'عرض استثنائي' : 'VIP Exclusive',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -390,15 +398,15 @@ class _FeaturedCarouselState extends State<FeaturedCarousel> {
                       children: [
                         Text(
                           '${apt.monthlyPrice.round()}',
-                          style: TextStyle(
+                          style: GoogleFonts.outfit(
                             color: context.accentColor,
-                            fontSize: 15,
+                            fontSize: 15.5,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
                         const SizedBox(width: 3),
                         Text(
-                          'ج.م',
+                          tr.tr('currency'),
                           style: TextStyle(
                             color: context.textPrimary,
                             fontSize: 10,

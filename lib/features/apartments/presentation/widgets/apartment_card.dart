@@ -5,6 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/widgets/staggered_entrance.dart';
 import 'package:sakani/core/widgets/app_cached_image.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
+import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dart';
 
@@ -57,6 +60,8 @@ class _ApartmentCardState extends State<ApartmentCard>
 
   @override
   Widget build(BuildContext context) {
+    final lang = context.watch<LocaleProvider>().lang;
+    final tr = AppLocalizations(lang);
     final apt = widget.apartment;
     final isFavorite = context.watch<WishlistCubit>().isFavorite(apt.id);
     final isDark = context.isDark;
@@ -85,8 +90,8 @@ class _ApartmentCardState extends State<ApartmentCard>
               ),
               if (isDark)
                 BoxShadow(
-                  color: context.accentColor.withValues(alpha: 0.03),
-                  blurRadius: 10,
+                  color: context.accentColor.withValues(alpha: 0.04),
+                  blurRadius: 12,
                   offset: const Offset(0, 2),
                 ),
             ],
@@ -198,7 +203,7 @@ class _ApartmentCardState extends State<ApartmentCard>
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'موثق ومميز',
+                            lang == 'ar' ? 'موثق ومميز' : 'Verified VIP',
                             style: TextStyle(
                               color: context.accentColor,
                               fontSize: 11,
@@ -421,21 +426,25 @@ class _ApartmentCardState extends State<ApartmentCard>
                       children: [
                         _ModernSpecPill(
                           icon: Icons.king_bed_rounded,
-                          value: '${apt.bedrooms} غرف',
+                          value: '${apt.bedrooms} ${lang == 'ar' ? 'غرف' : 'Beds'}',
                         ),
                         _ModernSpecPill(
                           icon: Icons.bathtub_rounded,
-                          value: '${apt.bathrooms} حمام',
+                          value: '${apt.bathrooms} ${lang == 'ar' ? 'حمام' : 'Baths'}',
                         ),
                         _ModernSpecPill(
                           icon: Icons.straighten_rounded,
-                          value: '${apt.area.round()} م²',
+                          value: '${apt.area.round()} ${lang == 'ar' ? 'م²' : 'm²'}',
                         ),
                         _ModernSpecPill(
                           icon: Icons.access_time_rounded,
                           value: apt.availableRentTypes.isNotEmpty
-                              ? apt.availableRentTypes.first
-                              : 'شهري',
+                              ? (apt.availableRentTypes.first == 'يومي'
+                                  ? tr.tr('daily')
+                                  : (apt.availableRentTypes.first == 'سنوي'
+                                      ? tr.tr('yearly')
+                                      : tr.tr('monthly')))
+                              : tr.tr('monthly'),
                         ),
                       ],
                     ),
@@ -457,12 +466,12 @@ class _ApartmentCardState extends State<ApartmentCard>
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'سعر الإيجار',
+                            Text(
+                              lang == 'ar' ? 'سعر الإيجار' : 'Rental Price',
                               style: TextStyle(
                                 fontSize: 10,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w500,
+                                color: context.textSecondary.withValues(alpha: 0.8),
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -472,15 +481,15 @@ class _ApartmentCardState extends State<ApartmentCard>
                               children: [
                                 Text(
                                   '${apt.monthlyPrice.round()}',
-                                  style: TextStyle(
+                                  style: GoogleFonts.outfit(
                                     color: context.accentColor,
-                                    fontSize: 19,
+                                    fontSize: 20,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'ج.م',
+                                  tr.tr('currency'),
                                   style: TextStyle(
                                     color: context.accentColor,
                                     fontSize: 12,
@@ -492,15 +501,15 @@ class _ApartmentCardState extends State<ApartmentCard>
                                           !apt.availableRentTypes.contains(
                                             "شهري",
                                           )
-                                      ? ' / يومياً'
+                                      ? ' / ${tr.tr('daily')}'
                                       : apt.availableRentTypes.contains(
                                               "سنوي",
                                             ) &&
                                             !apt.availableRentTypes.contains(
                                               "شهري",
                                             )
-                                      ? ' / سنوياً'
-                                      : ' / شهرياً',
+                                      ? ' / ${tr.tr('yearly')}'
+                                      : ' / ${tr.tr('monthly')}',
                                   style: TextStyle(
                                     color: context.textSecondary,
                                     fontSize: 11,
@@ -544,7 +553,7 @@ class _ApartmentCardState extends State<ApartmentCard>
                               Text(
                                 apt.ownerName.isNotEmpty
                                     ? apt.ownerName
-                                    : 'مالك موثق',
+                                    : (lang == 'ar' ? 'مالك موثق' : 'Verified Host'),
                                 style: TextStyle(
                                   color: context.textPrimary,
                                   fontSize: 11.5,

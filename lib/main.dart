@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/chat/data/models/chat_message.dart';
@@ -24,6 +25,9 @@ import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
 import 'package:sakani/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:sakani/core/utils/page_transitions.dart';
 import 'package:sakani/features/settings/presentation/screens/user_profile_screen.dart';
+import 'package:sakani/features/apartments/presentation/screens/apartments_map_screen.dart';
+import 'package:sakani/features/ai_assistant/presentation/screens/ai_assistant_screen.dart';
+import 'package:sakani/features/contracts/presentation/screens/contract_screen.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/di/injection_container.dart';
@@ -75,6 +79,7 @@ class SakaniApp extends StatelessWidget {
             locale: locale.locale,
             supportedLocales: const [Locale('ar'), Locale('en')],
             localizationsDelegates: const [
+              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
@@ -125,6 +130,21 @@ class SakaniApp extends StatelessWidget {
                   return LuxuryPageRoute(page: const KycScreen());
                 case '/user-profile':
                   return LuxuryPageRoute(page: const UserProfileScreen());
+                case '/apartments-map':
+                  return LuxuryPageRoute(page: const ApartmentsMapScreen());
+                case '/ai-assistant':
+                  return LuxuryPageRoute(page: const AiAssistantScreen());
+                case '/contract':
+                  final args = settings.arguments as Map<String, dynamic>;
+                  return LuxuryPageRoute(
+                    page: ContractScreen(
+                      apartment: args['apartment'],
+                      totalAmount: args['totalAmount'],
+                      periodType: args['periodType'],
+                      startDate: args['startDate'],
+                      endDate: args['endDate'],
+                    ),
+                  );
                 default:
                   return LuxuryPageRoute(page: const SplashScreen());
               }
