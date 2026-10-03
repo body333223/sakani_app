@@ -25,6 +25,8 @@ class ApartmentModel extends ApartmentEntity {
     super.cancellationPolicy = 'مرنة',
     super.maxGuests = 2,
     super.isAvailable = true,
+    super.occupiedFrom,
+    super.occupiedUntil,
     super.createdAt,
   });
 
@@ -53,6 +55,8 @@ class ApartmentModel extends ApartmentEntity {
       'cancellationPolicy': cancellationPolicy,
       'maxGuests': maxGuests,
       'isAvailable': isAvailable,
+      'occupiedFrom': occupiedFrom?.toIso8601String(),
+      'occupiedUntil': occupiedUntil?.toIso8601String(),
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -83,6 +87,8 @@ class ApartmentModel extends ApartmentEntity {
       contactPhone: map['contactPhone'] ?? '',
       maxGuests: map['maxGuests'] ?? 2,
       isAvailable: map['isAvailable'] ?? true,
+      occupiedFrom: map['occupiedFrom'] != null ? DateTime.tryParse(map['occupiedFrom']) : null,
+      occupiedUntil: map['occupiedUntil'] != null ? DateTime.tryParse(map['occupiedUntil']) : null,
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt']) ?? DateTime.now()
           : DateTime.now(),
@@ -114,6 +120,8 @@ class ApartmentModel extends ApartmentEntity {
       cancellationPolicy: entity.cancellationPolicy,
       maxGuests: entity.maxGuests,
       isAvailable: entity.isAvailable,
+      occupiedFrom: entity.occupiedFrom,
+      occupiedUntil: entity.occupiedUntil,
       createdAt: entity.createdAt,
     );
   }
@@ -142,6 +150,8 @@ class ApartmentModel extends ApartmentEntity {
     String? cancellationPolicy,
     int? maxGuests,
     bool? isAvailable,
+    DateTime? occupiedFrom,
+    DateTime? occupiedUntil,
     DateTime? createdAt,
   }) {
     return ApartmentModel(
@@ -168,6 +178,8 @@ class ApartmentModel extends ApartmentEntity {
       cancellationPolicy: cancellationPolicy ?? this.cancellationPolicy,
       maxGuests: maxGuests ?? this.maxGuests,
       isAvailable: isAvailable ?? this.isAvailable,
+      occupiedFrom: occupiedFrom ?? this.occupiedFrom,
+      occupiedUntil: occupiedUntil ?? this.occupiedUntil,
       createdAt: createdAt ?? this.createdAt,
     );
   }

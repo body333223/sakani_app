@@ -11,10 +11,12 @@ import 'package:sakani/features/apartments/presentation/cubit/apartment_state.da
 import 'package:sakani/features/apartments/presentation/widgets/owner_apartment_item.dart';
 import 'package:sakani/features/apartments/presentation/widgets/owner_stats_overview.dart';
 import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/features/bookings/data/models/booking_model.dart';
 import 'package:sakani/features/bookings/presentation/providers/booking_provider.dart';
 import 'package:sakani/features/bookings/presentation/widgets/owner_booking_card.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
+import 'package:sakani/features/wallet/data/services/wallet_service.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
@@ -37,6 +39,40 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         context.read<BookingProvider>().getOwnerBookings(user.uid);
       }
     });
+  }
+
+  Future<void> _handleAcceptBooking(Booking b) async {
+    // 1. Update booking status
+    await context.read<BookingProvider>().updateBookingStatus(b.id, 'مقبول');
+
+    // 2. Mark apartment as occupied with start & end dates
+    if (mounted) {
+      await context.read<ApartmentCubit>().setOccupancy(
+        b.apartmentId,
+        from: b.startDate,
+        until: b.endDate,
+        isAvailable: false,
+      );
+
+      // 3. Credit owner earnings directly to Digital Wallet!
+      final netEarnings = (b.totalAmount - b.commissionAmount).clamp(0.0, double.infinity);
+      await WalletService().recordBookingEarnings(
+        amount: netEarnings,
+        apartmentTitle: b.apartmentTitle,
+        tenantName: b.tenantName,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'تم تأكيد حجز "${b.apartmentTitle}" بنجاح! تم حجز العقار من ${b.startDate.year}/${b.startDate.month}/${b.startDate.day} وإيداع ${netEarnings.round()} ج.م في محفظتك.',
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override
@@ -64,6 +100,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.account_balance_wallet_rounded, color: context.accentColor),
+            onPressed: () => Navigator.pushNamed(context, '/wallet'),
+            tooltip: 'المحفظة الرقمية',
+          ),
           if (_currentIndex == 0 || _currentIndex == 1)
             IconButton(
               icon: Icon(Icons.add_circle_outline_rounded, color: context.accentColor),
@@ -99,7 +140,10 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             final activeBookings = bookings.where((b) => b.status == 'مقبول' || b.status == 'نشط').length;
             final totalRevenue = bookings
                 .where((b) => b.status == 'مقبول' || b.status == 'نشط' || b.status == 'مكتمل')
-                .fold<double>(0.0, (sum, b) => sum + b.totalAmount);
+                .fold<double>(0.0, (sum, b) => sum + (b.totalAmount - b.commissionAmount));
+            final pendingRevenue = bookings
+                .where((b) => b.status == 'قيد الانتظار')
+                .fold<double>(0.0, (sum, b) => sum + (b.totalAmount - b.commissionAmount));
 
             return RefreshIndicator(
               onRefresh: () async {
@@ -117,6 +161,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     availableProperties: available,
                     activeBookings: activeBookings,
                     estimatedRevenue: totalRevenue,
+                    pendingRevenue: pendingRevenue,
+                    onOpenWallet: () => Navigator.pushNamed(context, '/wallet'),
                   ),
                   const SizedBox(height: 20),
 
@@ -171,7 +217,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         final b = bookings[index];
                         return OwnerBookingCard(
                           booking: b,
-                          onAccept: () => bookProv.updateBookingStatus(b.id, 'مقبول'),
+                          onAccept: () => _handleAcceptBooking(b),
                           onCancel: () => bookProv.updateBookingStatus(b.id, 'ملغي'),
                         );
                       },
@@ -226,6 +272,16 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                       apartment: apt,
                       onToggleAvailability: (_) {
                         context.read<ApartmentCubit>().toggleAvailability(apt.id, apt.isAvailable);
+                      },
+                      onUpdatePrice: (newPrice) {
+                        context.read<ApartmentCubit>().updatePrice(apt.id, newPrice);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('تم تحديث سعر العقار إلى ${newPrice.round()} ج.م شهرياً بنجاح'),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
                       },
                       onDelete: () => _confirmDelete(context, apt.id, apt.title),
                       onTap: () {
@@ -342,7 +398,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           final b = filtered[index];
                           return OwnerBookingCard(
                             booking: b,
-                            onAccept: () => bookProv.updateBookingStatus(b.id, 'مقبول'),
+                            onAccept: () => _handleAcceptBooking(b),
                             onCancel: () => bookProv.updateBookingStatus(b.id, 'ملغي'),
                           );
                         },

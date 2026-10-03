@@ -98,6 +98,24 @@ class ApartmentCubit extends Cubit<ApartmentState> {
     ));
   }
 
+  Future<void> updatePrice(String id, double newPrice) async {
+    await updateApartmentUseCase(UpdateApartmentParams(
+      id: id,
+      data: {'monthlyPrice': newPrice},
+    ));
+  }
+
+  Future<void> setOccupancy(String id, {DateTime? from, DateTime? until, bool isAvailable = false}) async {
+    await updateApartmentUseCase(UpdateApartmentParams(
+      id: id,
+      data: {
+        'isAvailable': isAvailable,
+        'occupiedFrom': from?.toIso8601String(),
+        'occupiedUntil': until?.toIso8601String(),
+      },
+    ));
+  }
+
   Future<bool> deleteApartment(String id) async {
     final result = await deleteApartmentUseCase(id);
     return result.fold(

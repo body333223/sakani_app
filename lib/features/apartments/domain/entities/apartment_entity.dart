@@ -24,6 +24,8 @@ class ApartmentEntity extends Equatable {
   final String cancellationPolicy;
   final int maxGuests;
   final bool isAvailable;
+  final DateTime? occupiedFrom;
+  final DateTime? occupiedUntil;
   final DateTime createdAt;
 
   ApartmentEntity({
@@ -50,8 +52,13 @@ class ApartmentEntity extends Equatable {
     this.cancellationPolicy = 'مرنة',
     this.maxGuests = 2,
     this.isAvailable = true,
+    this.occupiedFrom,
+    this.occupiedUntil,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
+
+  bool get isCurrentlyOccupied =>
+      occupiedUntil != null && occupiedUntil!.isAfter(DateTime.now());
 
   double get pricePerDay => dailyPrice;
   double get pricePerMonth => monthlyPrice > 0 ? monthlyPrice : dailyPrice * 30;

@@ -138,6 +138,12 @@ class ApartmentRepositoryImpl implements ApartmentRepository {
           dailyPrice: data['dailyPrice'] != null ? (data['dailyPrice'] as num).toDouble() : old.dailyPrice,
           monthlyPrice: data['monthlyPrice'] != null ? (data['monthlyPrice'] as num).toDouble() : old.monthlyPrice,
           isAvailable: data['isAvailable'] ?? old.isAvailable,
+          occupiedFrom: data.containsKey('occupiedFrom')
+              ? (data['occupiedFrom'] != null ? DateTime.tryParse(data['occupiedFrom']) : null)
+              : old.occupiedFrom,
+          occupiedUntil: data.containsKey('occupiedUntil')
+              ? (data['occupiedUntil'] != null ? DateTime.tryParse(data['occupiedUntil']) : null)
+              : old.occupiedUntil,
         );
         _cache[idx] = updated;
         _notify();

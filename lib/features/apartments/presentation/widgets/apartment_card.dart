@@ -253,6 +253,48 @@ class _ApartmentCardState extends State<ApartmentCard>
                     ),
                   ),
 
+                  // ── Occupancy Period Badge ──
+                  if (apt.isCurrentlyOccupied && apt.occupiedUntil != null)
+                    Positioned(
+                      top: 14,
+                      left: 60,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.35),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.lock_clock_rounded,
+                              size: 13,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'مشغول حتى ${apt.occupiedUntil!.year}/${apt.occupiedUntil!.month.toString().padLeft(2, '0')}/${apt.occupiedUntil!.day.toString().padLeft(2, '0')}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                   // ── City & Address on Bottom Right ──
                   Positioned(
                     bottom: 12,
