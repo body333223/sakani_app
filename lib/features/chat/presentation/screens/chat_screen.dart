@@ -43,6 +43,11 @@ class _ChatScreenState extends State<ChatScreen> {
     final generalDigitsRegex = RegExp(r'\b(?:\d[\s\-_.]*){9,13}\b');
     // External links and whatsapp
     final externalLinkRegex = RegExp(r'(?:wa\.me|whatsapp\.com|t\.me|telegram\.me|facebook\.com|instagram\.com)', caseSensitive: false);
+    // Spelled-out Arabic Egyptian numbers pattern (e.g. زيرو عشرة, زيرو حداشر, صفر واحد)
+    final spelledNumberRegex = RegExp(
+      r'(?:زيرو|صفر)\s*(?:عشر[ةه]|حداشر|اتناشر|تلاتاشر|اربعتاشر|خمستاشر|واحد|اتنين|تلاته|اربعه|خمسه)',
+      caseSensitive: false,
+    );
 
     String filtered = raw;
     bool hasViolation = false;
@@ -50,6 +55,11 @@ class _ChatScreenState extends State<ChatScreen> {
     if (phoneRegex.hasMatch(filtered) || generalDigitsRegex.hasMatch(filtered)) {
       filtered = filtered.replaceAll(phoneRegex, '[رقم محظور لحمايتك - تواصل داخل المنصة]');
       filtered = filtered.replaceAll(generalDigitsRegex, '[رقم محظور لحمايتك - تواصل داخل المنصة]');
+      hasViolation = true;
+    }
+
+    if (spelledNumberRegex.hasMatch(filtered)) {
+      filtered = filtered.replaceAll(spelledNumberRegex, '[تنبيه: محظور كتابة أرقام الهواتف نصاً]');
       hasViolation = true;
     }
 

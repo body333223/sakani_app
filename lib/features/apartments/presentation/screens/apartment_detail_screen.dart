@@ -13,6 +13,7 @@ import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/chat/presentation/providers/chat_provider.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
+import 'package:sakani/features/bnpl/presentation/widgets/bnpl_calculator_modal.dart';
 
 class ApartmentDetailScreen extends StatefulWidget {
   final Apartment apartment;
@@ -550,6 +551,30 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                               ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 2),
+                        InkWell(
+                          onTap: () => BnplCalculatorModal.show(
+                            context,
+                            totalRent: apt.monthlyPrice,
+                            apartmentTitle: apt.title,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.bolt_rounded, color: AppColors.gold, size: 12),
+                              const SizedBox(width: 2),
+                              Text(
+                                'قسّط مع ڤاليو وفوري',
+                                style: TextStyle(
+                                  color: context.accentColor,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

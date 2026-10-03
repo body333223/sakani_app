@@ -407,8 +407,122 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                 ),
               ),
 
+              // ── AI Copilot & Concierge Quick Access Row ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 8),
+                  child: Row(
+                    children: [
+                      // AI Copilot Card
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => Navigator.pushNamed(context, '/ai-copilot'),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.gold.withValues(alpha: 0.16),
+                                  AppColors.goldDark.withValues(alpha: 0.05),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.gold.withValues(alpha: 0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.gold, size: 18),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        isArabic ? 'مستشار سكني AI' : 'Sakani AI',
+                                        style: const TextStyle(
+                                          color: AppColors.gold,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        isArabic ? 'ابحث بالعامية فوراً' : 'Ask in plain Arabic',
+                                        style: TextStyle(color: context.textSecondary, fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+
+                      // Concierge Services Card
+                      Expanded(
+                        child: InkWell(
+                          onTap: () => Navigator.pushNamed(context, '/concierge'),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: context.cardColor,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: context.borderColor),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.purple.withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.room_service_rounded, color: Colors.purpleAccent, size: 18),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        isArabic ? 'خدمات الكونسيرج' : 'Concierge',
+                                        style: TextStyle(
+                                          color: context.textPrimary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Text(
+                                        isArabic ? 'نظافة، صيانة، ومطار' : 'Cleaning & Airport',
+                                        style: TextStyle(color: context.textSecondary, fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               const SliverToBoxAdapter(
-                child: SizedBox(height: 16),
+                child: SizedBox(height: 10),
               ),
 
               // ── Loading Skeletons ──
