@@ -210,8 +210,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ? CachedNetworkImage(
                               imageUrl: user.photoUrl!,
                               fit: BoxFit.cover,
-                              placeholder: (_, __) => _avatarPlaceholder(user),
-                              errorWidget: (_, __, ___) => _avatarPlaceholder(user),
+                              placeholder: (context, url) => _avatarPlaceholder(user),
+                              errorWidget: (context, url, error) => _avatarPlaceholder(user),
                             )
                           : _avatarPlaceholder(user),
                     ),
@@ -820,11 +820,12 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           ElevatedButton(
             onPressed: () async {
+              final nav = Navigator.of(context);
               Navigator.pop(ctx);
               final authCubit = context.read<AuthCubit>();
               await authCubit.logout();
               if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                nav.pushNamedAndRemoveUntil('/login', (_) => false);
               }
             },
             style: ElevatedButton.styleFrom(
