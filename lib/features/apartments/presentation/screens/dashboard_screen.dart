@@ -18,6 +18,10 @@ import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart'
 import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sakani/core/services/push_notification_service.dart';
+import 'package:sakani/features/contracts/data/services/contract_service.dart';
+import 'package:sakani/features/contracts/presentation/screens/digital_contract_screen.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
@@ -55,17 +59,90 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         isAvailable: false,
       );
 
-      // 3. Net earnings calculated
-      final netEarnings = (b.totalAmount - b.commissionAmount).clamp(0.0, double.infinity);
+      // 3. Auto-generate official certified digital rental contract with National ID & SHA-256 seal
+      final contract = await ContractService().generateOrGetContract(
+        booking: b,
+      );
 
+      // 4. Send Instant Push Notification with Audio Alert to Tenant's phone
+      if (mounted) {
+        await PushNotificationService().notifyTenantBookingAccepted(
+          context: context,
+          tenantId: b.tenantId,
+          apartmentTitle: b.apartmentTitle,
+          contractId: contract.id,
+        );
+      }
+
+      // 5. Present official contract confirmation modal with direct view/export action
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.tr('bookingConfirmedSuccess', [b.apartmentTitle, netEarnings.round().toString()]),
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: context.surfaceColor,
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBr),
+          title: Row(
+            children: [
+              const Icon(Icons.verified_rounded, color: AppColors.success, size: 28),
+              const SizedBox(width: 8),
+              Text(
+                'تم قبول الحجز وتوثيق العقد',
+                style: GoogleFonts.tajawal(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ],
           ),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'تم إصدار وتوثيق عقد إيجار رسمي إلكتروني برقم قومي وبصمة مشفرة SHA-256 لحفظ حقوق الطرفين قانونياً.',
+                style: GoogleFonts.tajawal(fontSize: 13, color: context.textPrimary, height: 1.4),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.1),
+                  borderRadius: AppRadius.mdBr,
+                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('رقم العقد: ${contract.id}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.gold)),
+                    const SizedBox(height: 2),
+                    Text('الحالة: معتمد ومحمي بحساب الضمان (Escrow)', style: GoogleFonts.tajawal(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    Text('الرقم القومي للمستأجر: ${contract.tenantNationalId}', style: GoogleFonts.outfit(fontSize: 11, color: context.textSecondary)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text('إغلاق', style: GoogleFonts.tajawal(color: context.textSecondary)),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DigitalContractScreen(contract: contract),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.description_rounded, size: 16),
+              label: Text('عرض وثيقة العقد 📄', style: GoogleFonts.tajawal(fontWeight: FontWeight.bold, fontSize: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.gold,
+                foregroundColor: const Color(0xFF080C14),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -104,6 +181,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
     if (confirm == true && mounted) {
       await context.read<BookingProvider>().updateBookingStatus(b.id, 'مرفوض');
+      if (!mounted) return;
+      await PushNotificationService().notifyTenantBookingRejected(
+        context: context,
+        tenantId: b.tenantId,
+        apartmentTitle: b.apartmentTitle,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

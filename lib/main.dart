@@ -27,6 +27,8 @@ import 'package:sakani/features/settings/presentation/screens/user_profile_scree
 import 'package:sakani/features/apartments/presentation/screens/apartments_map_screen.dart';
 import 'package:sakani/features/ai_assistant/presentation/screens/ai_assistant_screen.dart';
 import 'package:sakani/features/contracts/presentation/screens/contract_screen.dart';
+import 'package:sakani/features/contracts/domain/models/contract_model.dart';
+import 'package:sakani/features/contracts/presentation/screens/digital_contract_screen.dart';
 import 'package:sakani/features/ai_assistant/presentation/screens/ai_copilot_screen.dart';
 import 'package:sakani/features/concierge/presentation/screens/concierge_screen.dart';
 
@@ -147,6 +149,11 @@ class SakaniApp extends StatelessWidget {
                       startDate: args['startDate'],
                       endDate: args['endDate'],
                     ),
+                  );
+                case '/digital-contract':
+                  final contract = settings.arguments as ContractModel;
+                  return LuxuryPageRoute(
+                    page: DigitalContractScreen(contract: contract),
                   );
                 default:
                   return LuxuryPageRoute(page: const SplashScreen());

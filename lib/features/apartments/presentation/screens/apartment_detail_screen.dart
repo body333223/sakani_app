@@ -15,6 +15,8 @@ import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/bnpl/presentation/widgets/bnpl_calculator_modal.dart';
 import 'package:sakani/core/security/booking_security_guard.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:sakani/features/reviews/presentation/widgets/trust_badge_widget.dart';
 
 class ApartmentDetailScreen extends StatefulWidget {
   final Apartment apartment;
@@ -463,24 +465,58 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                  const SizedBox(height: 3),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.verified_rounded,
-                                        size: 14,
-                                        color: context.accentColor,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        context.tr('verifiedHost'),
-                                        style: TextStyle(
-                                          color: context.accentColor,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(height: 4),
+                                  TrustBadgeWidget(
+                                    userId: apt.ownerId,
+                                    isOwner: true,
+                                    isCompact: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ── Official E-Contract & Escrow Guarantee Box ──
+                      Container(
+                        margin: const EdgeInsets.only(top: 14),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.goldDark.withValues(alpha: 0.18),
+                              context.surfaceColor,
+                            ],
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
+                          ),
+                          borderRadius: AppRadius.mdBr,
+                          border: Border.all(color: AppColors.gold.withValues(alpha: 0.35)),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.gold.withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.verified_user_rounded, color: AppColors.gold, size: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'عقد إيجار رسمي موثق وحساب ضمان (Escrow)',
+                                    style: GoogleFonts.tajawal(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.goldLight),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'فور قبول الحجز، يتم توليد وثيقة عقد إيجار PDF رسمية برقم قومي وبصمة رقمية مشفرة لحفظ حقوقك قانونياً.',
+                                    style: GoogleFonts.tajawal(fontSize: 11, color: context.textSecondary, height: 1.35),
                                   ),
                                 ],
                               ),

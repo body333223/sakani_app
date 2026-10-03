@@ -23,6 +23,7 @@ import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart'
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
 import 'package:sakani/core/widgets/staggered_entrance.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TenantHomeScreen extends StatefulWidget {
   const TenantHomeScreen({super.key});
@@ -521,8 +522,46 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                 ),
               ),
 
+              // ── Verified E-Contracts & Mutual Escrow Trust Highlight ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.gold.withValues(alpha: 0.12),
+                          context.surfaceColor,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.verified_rounded, color: AppColors.gold, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            isArabic
+                                ? 'عقود إيجار إلكترونية موثقة برقم قومي وبصمة مشفرة فور قبول الحجز'
+                                : 'Certified Digital Rental Contracts with National ID upon booking acceptance',
+                            style: GoogleFonts.tajawal(
+                              color: context.textPrimary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
               const SliverToBoxAdapter(
-                child: SizedBox(height: 10),
+                child: SizedBox(height: 6),
               ),
 
               // ── Loading Skeletons ──

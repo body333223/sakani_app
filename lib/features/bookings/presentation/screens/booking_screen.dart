@@ -7,7 +7,6 @@ import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
 import 'package:sakani/features/bookings/presentation/providers/booking_provider.dart';
 import 'package:sakani/core/widgets/gradient_button.dart';
 import 'package:sakani/core/widgets/app_snackbar.dart';
-import 'package:sakani/core/widgets/notifications_bottom_sheet.dart';
 import 'package:sakani/core/services/platform_config_service.dart';
 import 'package:sakani/core/services/fair_deposit_service.dart';
 import 'package:sakani/core/security/security_sanitizer.dart';
@@ -15,6 +14,7 @@ import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/core/security/booking_security_guard.dart';
 import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/core/services/push_notification_service.dart';
 
 /// شاشة تأكيد الحجز الحديثة فائقة السرعة ومريحة للعين (Clean & Eye-Friendly UI)
 class BookingScreen extends StatefulWidget {
@@ -190,13 +190,17 @@ class _BookingScreenState extends State<BookingScreen> {
     setState(() => _isSubmitting = false);
 
     if (success) {
-      // Add real-time notification
-      NotificationsBottomSheet.addNotification(
-        title: 'تم إرسال طلب الحجز بنجاح 🏡',
-        body: 'طلب حجزك لشقة "${widget.apartment.title}" أُرسل للمالك وبانتظار موافقته.',
-        icon: Icons.check_circle_rounded,
-        color: AppColors.success,
+      // Trigger instant push notification with sound to the owner
+      await PushNotificationService().notifyOwnerNewBooking(
+        context: context,
+        ownerId: widget.apartment.ownerId,
+        tenantName: booking.tenantName,
+        apartmentTitle: widget.apartment.title,
+        totalAmount: _totalAmount,
+        bookingId: booking.id,
       );
+
+      if (!mounted) return;
 
       // Show quick success bottom sheet
       showModalBottomSheet(
