@@ -8,6 +8,7 @@ import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
+import 'package:sakani/core/security/booking_security_guard.dart';
 
 class _ChatMessage {
   final String text;
@@ -599,9 +600,16 @@ class _ChatBubble extends StatelessWidget {
                                 visualDensity: VisualDensity.compact,
                                 padding: EdgeInsets.zero,
                               ),
-                              onPressed: () {
-                                final model = apt is ApartmentModel ? apt : ApartmentModel.fromEntity(apt);
-                                Navigator.pushNamed(context, '/booking', arguments: model);
+                              onPressed: () async {
+                                final canProceed = await BookingSecurityGuard.ensureCanBook(
+                                  context,
+                                  apartmentOwnerId: apt.ownerId,
+                                  apartmentTitle: apt.title,
+                                );
+                                if (canProceed && context.mounted) {
+                                  final model = apt is ApartmentModel ? apt : ApartmentModel.fromEntity(apt);
+                                  Navigator.pushNamed(context, '/booking', arguments: model);
+                                }
                               },
                               child: Text('حجز فوري', style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.bold)),
                             ),

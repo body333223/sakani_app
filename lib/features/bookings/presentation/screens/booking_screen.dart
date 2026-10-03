@@ -13,6 +13,8 @@ import 'package:sakani/core/services/fair_deposit_service.dart';
 import 'package:sakani/core/security/security_sanitizer.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
+import 'package:sakani/core/security/booking_security_guard.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
 
 /// شاشة تأكيد الحجز الحديثة فائقة السرعة ومريحة للعين (Clean & Eye-Friendly UI)
 class BookingScreen extends StatefulWidget {
@@ -132,6 +134,24 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _confirmBooking() async {
+    final eligibility = BookingSecurityGuard.checkEligibility(
+      context: context,
+      apartmentOwnerId: widget.apartment.ownerId,
+    );
+    if (!eligibility.isEligible) {
+      AppSnackbar.show(
+        context,
+        message: eligibility.message ?? 'لا يمكن إتمام الحجز من هذا الحساب.',
+        type: ToastType.error,
+      );
+      BookingSecurityGuard.showBlockedModal(
+        context,
+        eligibility: eligibility,
+        apartmentTitle: widget.apartment.title,
+      );
+      return;
+    }
+
     final user = context.read<AuthProvider>().user;
     if (user == null) {
       AppSnackbar.show(context, message: 'يرجى تسجيل الدخول أولاً للمتابعة', type: ToastType.error);
@@ -248,6 +268,15 @@ class _BookingScreenState extends State<BookingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final eligibility = BookingSecurityGuard.checkEligibility(
+      context: context,
+      apartmentOwnerId: widget.apartment.ownerId,
+    );
+
+    if (eligibility.isMerchantRestricted || eligibility.isOwnProperty) {
+      return _buildBlockedScreen(context, eligibility);
+    }
+
     final lang = context.watch<LocaleProvider>().lang;
     final tr = AppLocalizations(lang);
 
@@ -599,6 +628,126 @@ class _BookingScreenState extends State<BookingScreen> {
       height: 76,
       color: Colors.grey.withValues(alpha: 0.1),
       child: const Icon(Icons.apartment_rounded, color: Colors.grey, size: 28),
+    );
+  }
+
+  Widget _buildBlockedScreen(BuildContext context, BookingEligibility eligibility) {
+    return Scaffold(
+      backgroundColor: context.bgColor,
+      appBar: AppBar(
+        title: const Text('الحجز غير متاح', style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 90,
+                height: 90,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.35),
+                    width: 2,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.shield_outlined,
+                  color: AppColors.error,
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                eligibility.isOwnProperty
+                    ? 'هذا العقار مسجل باسمك!'
+                    : 'حساب تاجر / مالك عقار 🚫',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: context.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                eligibility.isOwnProperty
+                    ? 'أنت المالك المسجل لهذا العقار، ولا يمكن إجراء حجوزات عليه من حساب المالك نفسه.\nيمكنك إدارة العقار ومتابعة طلبات الحجز من لوحة التحكم.'
+                    : 'حسابات أصحاب العقارات والتجار في منصة سكني مخصصة لإدارة وتأجير العقارات فقط ولا يُسمح لها بإجراء حجوزات داخل المنصة لمنع أي تعارض مصالح.\n\nلإجراء حجز، يرجى التبديل إلى حساب مستأجر.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: context.textSecondary,
+                  fontSize: 14,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: GradientButton(
+                  text: 'الذهاب للوحة تحكم المالك 📊',
+                  height: 48,
+                  onPressed: () {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/home',
+                      (route) => false,
+                    );
+                  },
+                ),
+              ),
+              if (eligibility.isMerchantRestricted) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(color: context.borderColor),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.logout_rounded, size: 18),
+                    label: const Text(
+                      'تسجيل الخروج والتبديل لمستأجر',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                    onPressed: () async {
+                      final authCubit = context.read<AuthCubit?>();
+                      final authProv = context.read<AuthProvider?>();
+                      final nav = Navigator.of(context);
+                      try {
+                        await authCubit?.logout();
+                      } catch (_) {}
+                      try {
+                        await authProv?.logout();
+                      } catch (_) {}
+                      nav.pushNamedAndRemoveUntil(
+                        '/login',
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'الرجوع للخلف',
+                  style: TextStyle(color: context.textSecondary, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

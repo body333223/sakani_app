@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/config/api_config.dart';
 import '../../../../core/config/constants.dart';
+import '../../../auth/data/services/auth_service.dart';
 import '../models/booking_model.dart';
 
 /// خدمة إدارة الحجوزات والعمليات مع التخزين الدائم (Clean Code Architecture)
@@ -57,6 +58,15 @@ class BookingService {
 
   /// إنشاء حجز جديد مع الحفظ الفوري الدائم
   Future<String> createBooking(Booking booking) async {
+    // ── Security Validation Guard ──
+    if (booking.tenantId.trim().isEmpty || booking.tenantId == booking.ownerId) {
+      throw Exception('Security violation: Cannot book your own property or invalid tenant ID.');
+    }
+    final directUser = AuthService.currentUser;
+    if (directUser != null && (directUser.role == 'owner' || directUser.isOwner)) {
+      throw Exception('Security violation: Merchant/Owner accounts are forbidden from making bookings.');
+    }
+
     await _ensureLoadedFromDisk();
 
     // 1. Try sending to the server

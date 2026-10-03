@@ -14,6 +14,7 @@ import 'package:sakani/features/chat/presentation/providers/chat_provider.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/bnpl/presentation/widgets/bnpl_calculator_modal.dart';
+import 'package:sakani/core/security/booking_security_guard.dart';
 
 class ApartmentDetailScreen extends StatefulWidget {
   final Apartment apartment;
@@ -602,20 +603,88 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                   ),
                   const SizedBox(width: 8),
 
-                  // Book Now Button
-                  Expanded(
-                    flex: 6,
-                    child: GradientButton(
-                      text: context.tr('bookNow'),
-                      height: 48,
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/booking',
-                          arguments: apt,
+                  // Role-Aware Booking Action Button
+                  Builder(
+                    builder: (btnContext) {
+                      final eligibility = BookingSecurityGuard.checkEligibility(
+                        context: btnContext,
+                        apartmentOwnerId: apt.ownerId,
+                      );
+
+                      if (eligibility.isOwnProperty) {
+                        return Expanded(
+                          flex: 6,
+                          child: GradientButton(
+                            text: 'إدارة عقارك 🛠️',
+                            height: 48,
+                            onPressed: () {
+                              Navigator.pushNamedAndRemoveUntil(
+                                btnContext,
+                                '/home',
+                                (route) => false,
+                              );
+                            },
+                          ),
                         );
-                      },
-                    ),
+                      }
+
+                      if (eligibility.isMerchantRestricted) {
+                        return Expanded(
+                          flex: 6,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.error.withValues(alpha: 0.12),
+                              foregroundColor: AppColors.error,
+                              side: BorderSide(
+                                color: AppColors.error.withValues(alpha: 0.4),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              elevation: 0,
+                            ),
+                            icon: const Icon(Icons.block_rounded, size: 16),
+                            label: const Text(
+                              'حساب تاجر 🚫 (الحجز للمستأجرين)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
+                            ),
+                            onPressed: () {
+                              BookingSecurityGuard.showBlockedModal(
+                                btnContext,
+                                eligibility: eligibility,
+                                apartmentTitle: apt.title,
+                              );
+                            },
+                          ),
+                        );
+                      }
+
+                      return Expanded(
+                        flex: 6,
+                        child: GradientButton(
+                          text: btnContext.tr('bookNow'),
+                          height: 48,
+                          onPressed: () async {
+                            final canProceed = await BookingSecurityGuard.ensureCanBook(
+                              btnContext,
+                              apartmentOwnerId: apt.ownerId,
+                              apartmentTitle: apt.title,
+                            );
+                            if (canProceed && btnContext.mounted) {
+                              Navigator.pushNamed(
+                                btnContext,
+                                '/booking',
+                                arguments: apt,
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

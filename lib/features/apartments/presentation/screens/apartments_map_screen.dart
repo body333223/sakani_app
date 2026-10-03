@@ -10,6 +10,7 @@ import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.da
 import 'package:sakani/features/apartments/presentation/cubit/apartment_state.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
+import 'package:sakani/core/security/booking_security_guard.dart';
 
 /// شاشة الخريطة التفاعلية واستكشاف الشقق جغرافياً
 class ApartmentsMapScreen extends StatefulWidget {
@@ -476,11 +477,18 @@ class _ApartmentMapCard extends StatelessWidget {
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 visualDensity: VisualDensity.compact,
                               ),
-                              onPressed: () {
-                                final model = apartment is ApartmentModel
-                                    ? apartment as ApartmentModel
-                                    : ApartmentModel.fromEntity(apartment);
-                                Navigator.pushNamed(context, '/booking', arguments: model);
+                              onPressed: () async {
+                                final canProceed = await BookingSecurityGuard.ensureCanBook(
+                                  context,
+                                  apartmentOwnerId: apartment.ownerId,
+                                  apartmentTitle: apartment.title,
+                                );
+                                if (canProceed && context.mounted) {
+                                  final model = apartment is ApartmentModel
+                                      ? apartment as ApartmentModel
+                                      : ApartmentModel.fromEntity(apartment);
+                                  Navigator.pushNamed(context, '/booking', arguments: model);
+                                }
                               },
                               child: Text(
                                 tr.tr('instantBook'),

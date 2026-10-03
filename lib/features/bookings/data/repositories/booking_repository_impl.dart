@@ -6,6 +6,7 @@ import 'package:sakani/features/bookings/data/datasources/booking_remote_data_so
 import 'package:sakani/features/bookings/data/models/booking_model.dart';
 import 'package:sakani/features/bookings/domain/entities/booking_entity.dart';
 import 'package:sakani/features/bookings/domain/repositories/booking_repository.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
   final BookingRemoteDataSource remoteDataSource;
@@ -89,6 +90,14 @@ class BookingRepositoryImpl implements BookingRepository {
 
   @override
   Future<Result<String>> createBooking(BookingEntity booking) async {
+    if (booking.tenantId.trim().isEmpty || booking.tenantId == booking.ownerId) {
+      return FailureResult(ServerFailure('لا يمكنك حجز عقار مسجل باسمك.'));
+    }
+    final directUser = AuthService.currentUser;
+    if (directUser != null && (directUser.role == 'owner' || directUser.isOwner)) {
+      return FailureResult(ServerFailure('عذراً، حسابات التجار مخصصة للإدارة فقط ولا يمكن إجراء حجز منها.'));
+    }
+
     try {
       final model = BookingModel.fromEntity(booking);
       final id = await remoteDataSource.createBooking(model);

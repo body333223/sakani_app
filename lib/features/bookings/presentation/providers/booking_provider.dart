@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:sakani/features/bookings/data/models/booking_model.dart';
 import 'package:sakani/features/bookings/data/services/booking_service.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
 
 class BookingProvider extends ChangeNotifier {
   final BookingService _bookingService = BookingService();
@@ -66,6 +67,18 @@ class BookingProvider extends ChangeNotifier {
   }
 
   Future<bool> createBooking(Booking booking) async {
+    if (booking.tenantId.trim().isEmpty || booking.tenantId == booking.ownerId) {
+      _error = 'لا يمكنك حجز عقار مسجل باسمك.';
+      notifyListeners();
+      return false;
+    }
+    final directUser = AuthService.currentUser;
+    if (directUser != null && (directUser.role == 'owner' || directUser.isOwner)) {
+      _error = 'حسابات أصحاب العقارات والتجار مخصصة لإدارة العقارات فقط ولا يمكن إجراء حجوزات منها.';
+      notifyListeners();
+      return false;
+    }
+
     _isLoading = true;
     notifyListeners();
     try {

@@ -5,6 +5,7 @@ import 'package:sakani/features/apartments/domain/entities/apartment_entity.dart
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
 import 'package:sakani/features/bookings/presentation/screens/booking_screen.dart';
+import 'package:sakani/core/security/booking_security_guard.dart';
 
 class AiCopilotMessage {
   final String text;
@@ -462,13 +463,20 @@ class _AiCopilotScreenState extends State<AiCopilotScreen> {
                       ),
                     ),
                     InkWell(
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final nav = Navigator.of(context);
+                        final canProceed = await BookingSecurityGuard.ensureCanBook(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => BookingScreen(apartment: ApartmentModel.fromEntity(apt)),
-                          ),
+                          apartmentOwnerId: apt.ownerId,
+                          apartmentTitle: apt.title,
                         );
+                        if (canProceed && mounted) {
+                          nav.push(
+                            MaterialPageRoute(
+                              builder: (_) => BookingScreen(apartment: ApartmentModel.fromEntity(apt)),
+                            ),
+                          );
+                        }
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
