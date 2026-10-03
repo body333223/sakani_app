@@ -82,10 +82,59 @@ class BookingProvider extends ChangeNotifier {
   }
 
   Future<void> updateBookingStatus(String bookingId, String status) async {
+    // 1. Immediate in-memory update for owner list
+    final ownerIdx = _ownerBookings.indexWhere((b) => b.id == bookingId);
+    if (ownerIdx != -1) {
+      final old = _ownerBookings[ownerIdx];
+      _ownerBookings[ownerIdx] = Booking(
+        id: old.id,
+        apartmentId: old.apartmentId,
+        apartmentTitle: old.apartmentTitle,
+        tenantId: old.tenantId,
+        tenantName: old.tenantName,
+        ownerId: old.ownerId,
+        startDate: old.startDate,
+        endDate: old.endDate,
+        totalAmount: old.totalAmount,
+        commissionAmount: old.commissionAmount,
+        securityDeposit: old.securityDeposit,
+        periodType: old.periodType,
+        status: status,
+        guests: old.guests,
+        createdAt: old.createdAt,
+      );
+      notifyListeners();
+    }
+
+    // 2. Immediate in-memory update for tenant list
+    final tenantIdx = _tenantBookings.indexWhere((b) => b.id == bookingId);
+    if (tenantIdx != -1) {
+      final old = _tenantBookings[tenantIdx];
+      _tenantBookings[tenantIdx] = Booking(
+        id: old.id,
+        apartmentId: old.apartmentId,
+        apartmentTitle: old.apartmentTitle,
+        tenantId: old.tenantId,
+        tenantName: old.tenantName,
+        ownerId: old.ownerId,
+        startDate: old.startDate,
+        endDate: old.endDate,
+        totalAmount: old.totalAmount,
+        commissionAmount: old.commissionAmount,
+        securityDeposit: old.securityDeposit,
+        periodType: old.periodType,
+        status: status,
+        guests: old.guests,
+        createdAt: old.createdAt,
+      );
+      notifyListeners();
+    }
+
     try {
       await _bookingService.updateBookingStatus(bookingId, status);
     } catch (e) {
       _error = e.toString();
+      notifyListeners();
     }
   }
 

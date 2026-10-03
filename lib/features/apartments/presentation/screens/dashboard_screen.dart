@@ -77,6 +77,50 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     }
   }
 
+  Future<void> _handleRejectBooking(Booking b) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: context.surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.mdBr),
+        title: const Row(
+          children: [
+            Icon(Icons.cancel_outlined, color: AppColors.error),
+            SizedBox(width: 8),
+            Text('رفض طلب الحجز', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+        content: Text('هل أنت متأكد من رغبتك في رفض طلب حجز ${b.apartmentTitle} للمستأجر ${b.tenantName}؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('تراجع', style: TextStyle(color: context.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('تأكيد الرفض'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await context.read<BookingProvider>().updateBookingStatus(b.id, 'مرفوض');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم رفض طلب الحجز (${b.apartmentTitle}) بنجاح'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = context.watch<LocaleProvider>().lang;
@@ -249,7 +293,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         return OwnerBookingCard(
                           booking: b,
                           onAccept: () => _handleAcceptBooking(b),
-                          onCancel: () => bookProv.updateBookingStatus(b.id, 'ملغي'),
+                          onCancel: () => _handleRejectBooking(b),
                         );
                       },
                     ),
@@ -363,7 +407,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         final allBookings = bookProv.ownerBookings;
         final filtered = _bookingFilter == 'الكل'
             ? allBookings
-            : allBookings.where((b) => b.status == _bookingFilter).toList();
+            : allBookings.where((b) {
+                if (_bookingFilter == 'ملغي') {
+                  return b.status == 'ملغي' || b.status == 'مرفوض';
+                }
+                return b.status == _bookingFilter;
+              }).toList();
 
         final filterOptions = [
           {'key': 'الكل', 'label': tr.tr('filterAll')},
@@ -437,7 +486,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           return OwnerBookingCard(
                             booking: b,
                             onAccept: () => _handleAcceptBooking(b),
-                            onCancel: () => bookProv.updateBookingStatus(b.id, 'ملغي'),
+                            onCancel: () => _handleRejectBooking(b),
                           );
                         },
                       ),

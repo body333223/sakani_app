@@ -36,9 +36,50 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  String _sanitizeAndFilterMessage(String raw) {
+    // Egyptian phone numbers pattern: 010, 011, 012, 015 with optional spaces, dashes, or +20 prefix
+    final phoneRegex = RegExp(r'(?:\+?20|0)?1[0125][0-9\s\-]{7,9}[0-9]', caseSensitive: false);
+    // Generic phone numbers / numbers with 8+ digits in sequence
+    final generalDigitsRegex = RegExp(r'\b(?:\d[\s\-_.]*){9,13}\b');
+    // External links and whatsapp
+    final externalLinkRegex = RegExp(r'(?:wa\.me|whatsapp\.com|t\.me|telegram\.me|facebook\.com|instagram\.com)', caseSensitive: false);
+
+    String filtered = raw;
+    bool hasViolation = false;
+
+    if (phoneRegex.hasMatch(filtered) || generalDigitsRegex.hasMatch(filtered)) {
+      filtered = filtered.replaceAll(phoneRegex, '[رقم محظور لحمايتك - تواصل داخل المنصة]');
+      filtered = filtered.replaceAll(generalDigitsRegex, '[رقم محظور لحمايتك - تواصل داخل المنصة]');
+      hasViolation = true;
+    }
+
+    if (externalLinkRegex.hasMatch(filtered)) {
+      filtered = filtered.replaceAll(externalLinkRegex, '[رابط محظور لحمايتك]');
+      hasViolation = true;
+    }
+
+    if (hasViolation && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            '🛡️ تنبيه أمني: للحفاظ على حقوقك وتأمين تعاملاتك، يُمنع تبادل أرقام الهواتف أو الروابط خارج سكني.',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 4),
+        ),
+      );
+    }
+
+    return filtered;
+  }
+
   void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+    final rawText = _controller.text.trim();
+    if (rawText.isEmpty) return;
+
+    final text = _sanitizeAndFilterMessage(rawText);
 
     final cubitUser = context.read<AuthCubit>().currentUser;
     final providerUser = context.read<AuthProvider>().user;
@@ -121,10 +162,37 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Text(
               widget.room.apartmentTitle,
               style: TextStyle(
-                color: context.accentColor.withValues(alpha: 0.7),
+                color: context.accentColor.withValues(alpha: 0.8),
                 fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
+            ),
+          ),
+
+          // ── Anti-Leak & Safety Advisory Banner ──
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.08),
+              border: Border(bottom: BorderSide(color: Colors.amber.withValues(alpha: 0.2))),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.shield_outlined, color: Colors.amber, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'لحمايتك: تمم الحجز والتواصل داخل المنصة فقط. يمنع تبادل أرقام الهواتف خارج سكني.',
+                    style: TextStyle(
+                      color: context.isDark ? Colors.amber[200] : Colors.amber[900],
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
