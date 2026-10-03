@@ -15,7 +15,7 @@ import 'package:sakani/features/bookings/data/models/booking_model.dart';
 import 'package:sakani/features/bookings/presentation/providers/booking_provider.dart';
 import 'package:sakani/features/bookings/presentation/widgets/owner_booking_card.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
-import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
+import 'package:sakani/features/settings/presentation/screens/profile_screen.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -217,7 +217,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       _buildApartmentsTab(tr),
       _buildBookingsTab(tr),
       const ChatListScreen(isEmbedded: true),
-      const SettingsScreen(isEmbedded: true),
+      const ProfileScreen(),
     ];
 
     return Scaffold(
@@ -599,9 +599,9 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           label: tr.tr('chats'),
         ),
         LuxuryNavItem(
-          selectedIcon: Icons.person_rounded,
-          unselectedIcon: Icons.person_outline_rounded,
-          label: tr.tr('myAccount'),
+          selectedIcon: Icons.account_circle_rounded,
+          unselectedIcon: Icons.account_circle_outlined,
+          label: 'ملفي',
         ),
       ],
     );

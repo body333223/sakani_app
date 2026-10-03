@@ -24,6 +24,8 @@ import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
 import 'package:sakani/core/utils/page_transitions.dart';
 import 'package:sakani/features/settings/presentation/screens/user_profile_screen.dart';
+import 'package:sakani/features/settings/presentation/screens/profile_screen.dart';
+import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
 import 'package:sakani/features/apartments/presentation/screens/apartments_map_screen.dart';
 import 'package:sakani/features/ai_assistant/presentation/screens/ai_assistant_screen.dart';
 import 'package:sakani/features/contracts/presentation/screens/contract_screen.dart';
@@ -31,6 +33,7 @@ import 'package:sakani/features/contracts/domain/models/contract_model.dart';
 import 'package:sakani/features/contracts/presentation/screens/digital_contract_screen.dart';
 import 'package:sakani/features/ai_assistant/presentation/screens/ai_copilot_screen.dart';
 import 'package:sakani/features/concierge/presentation/screens/concierge_screen.dart';
+import 'package:sakani/features/support/presentation/screens/support_chat_screen.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/di/injection_container.dart';
@@ -131,6 +134,12 @@ class SakaniApp extends StatelessWidget {
                   return LuxuryPageRoute(page: const KycScreen());
                 case '/user-profile':
                   return LuxuryPageRoute(page: const UserProfileScreen());
+                case '/profile':
+                  return LuxuryPageRoute(page: const ProfileScreen());
+                case '/settings':
+                  return LuxuryPageRoute(page: const SettingsScreen());
+                case '/support':
+                  return LuxuryPageRoute(page: const SupportChatScreen());
                 case '/apartments-map':
                   return LuxuryPageRoute(page: const ApartmentsMapScreen());
                 case '/ai-assistant':

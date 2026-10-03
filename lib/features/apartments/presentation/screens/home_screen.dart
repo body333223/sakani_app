@@ -21,7 +21,7 @@ import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/bookings/presentation/screens/my_bookings_screen.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
-import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
+import 'package:sakani/features/settings/presentation/screens/profile_screen.dart';
 import 'package:sakani/core/widgets/staggered_entrance.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -72,7 +72,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
       WishlistScreen(onExplore: () => setState(() => _currentIndex = 0)),
       const MyBookingsScreen(isEmbedded: true),
       const ChatListScreen(isEmbedded: true),
-      const SettingsScreen(isEmbedded: true),
+      const ProfileScreen(),
     ];
 
     final List<String> titles = [
@@ -80,7 +80,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
       tr.tr('wishlist'),
       tr.tr('myBookings'),
       tr.tr('chats'),
-      tr.tr('myAccount'),
+      'ملفي الشخصي',
     ];
 
     return Scaffold(
