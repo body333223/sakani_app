@@ -781,6 +781,27 @@ class _WalletScreenState extends State<WalletScreen> {
           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: context.accentColor.withValues(alpha: 0.6)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isArabic ? 'EN' : 'عربي',
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            onPressed: () => context.read<LocaleProvider>().toggleLang(),
+            tooltip: isArabic ? 'تغيير اللغة' : 'Change Language',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

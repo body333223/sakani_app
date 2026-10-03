@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sakani/core/config/theme.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/apartments/domain/entities/apartment_entity.dart';
 
 class OwnerApartmentItem extends StatelessWidget {
@@ -34,9 +35,9 @@ class OwnerApartmentItem extends StatelessWidget {
           children: [
             Icon(Icons.edit_note_rounded, color: context.accentColor),
             const SizedBox(width: 8),
-            const Text(
-              'تعديل سعر الإيجار',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            Text(
+              context.tr('editRentPrice'),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
             ),
           ],
         ),
@@ -45,7 +46,7 @@ class OwnerApartmentItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'أدخل السعر الشهري الجديد لعقار: "${apartment.title}"',
+              '${context.tr('enterNewMonthlyPrice')} "${apartment.title}"',
               style: TextStyle(fontSize: 13, color: context.textSecondary),
             ),
             const SizedBox(height: 16),
@@ -55,7 +56,7 @@ class OwnerApartmentItem extends StatelessWidget {
               autofocus: true,
               style: const TextStyle(fontWeight: FontWeight.bold),
               decoration: InputDecoration(
-                labelText: 'السعر الشهري (ج.م)',
+                labelText: context.tr('monthlyRentPrice'),
                 prefixIcon: const Icon(Icons.attach_money_rounded),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
@@ -65,7 +66,7 @@ class OwnerApartmentItem extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: TextStyle(color: context.textSecondary)),
+            child: Text(context.tr('cancel'), style: TextStyle(color: context.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -80,7 +81,7 @@ class OwnerApartmentItem extends StatelessWidget {
                 onUpdatePrice?.call(newPrice);
               }
             },
-            child: const Text('حفظ السعر', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(context.tr('savePrice'), style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -143,8 +144,8 @@ class OwnerApartmentItem extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       isOccupied
-                          ? 'مشغول من ${_formatDate(apartment.occupiedFrom!)} حتى ${_formatDate(apartment.occupiedUntil!)}'
-                          : 'متاح للحجز الفوري والتأجير',
+                          ? '${context.tr('occupiedFrom')} ${_formatDate(apartment.occupiedFrom!)} ${context.tr('until')} ${_formatDate(apartment.occupiedUntil!)}'
+                          : context.tr('availableForInstantBooking'),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -161,7 +162,9 @@ class OwnerApartmentItem extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'متبقي ${apartment.occupiedUntil!.difference(DateTime.now()).inDays.clamp(0, 999)} يوم',
+                      context.tr('daysRemaining', [
+                        apartment.occupiedUntil!.difference(DateTime.now()).inDays.clamp(0, 999).toString()
+                      ]),
                       style: const TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
@@ -251,9 +254,9 @@ class OwnerApartmentItem extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Text(
-                                  'ج.م / شهري',
-                                  style: TextStyle(
+                                Text(
+                                  context.tr('perMonth'),
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -283,7 +286,7 @@ class OwnerApartmentItem extends StatelessWidget {
                             onChanged: onToggleAvailability,
                           ),
                           Text(
-                            apartment.isAvailable ? 'متاح' : 'غير متاح',
+                            apartment.isAvailable ? context.tr('available') : context.tr('unavailable'),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -300,7 +303,7 @@ class OwnerApartmentItem extends StatelessWidget {
                             onPressed: () => _showPriceEditDialog(context),
                             icon: Icon(Icons.edit_note_rounded, size: 18, color: context.accentColor),
                             label: Text(
-                              'تعديل السعر',
+                              context.tr('editPrice'),
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w700,
@@ -316,7 +319,7 @@ class OwnerApartmentItem extends StatelessWidget {
                           const SizedBox(width: 6),
                           IconButton(
                             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 20),
-                            tooltip: 'حذف العقار',
+                            tooltip: context.tr('deleteProperty'),
                             onPressed: onDelete,
                           ),
                         ],

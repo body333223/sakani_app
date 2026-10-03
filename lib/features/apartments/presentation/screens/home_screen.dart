@@ -40,6 +40,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
   @override
   void initState() {
     super.initState();
+    NotificationsBottomSheet.init();
     context.read<ApartmentCubit>().loadApartments();
   }
 
@@ -148,22 +149,59 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
                       const SizedBox(width: 8),
 
                       // Notifications
-                      BouncingTap(
-                        onTap: () => NotificationsBottomSheet.show(context),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: context.cardColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: context.borderColor),
-                          ),
-                          child: Icon(
-                            Icons.notifications_none_rounded,
-                            color: context.textPrimary,
-                            size: 20,
-                          ),
-                        ),
+                      ValueListenableBuilder<int>(
+                        valueListenable: NotificationsBottomSheet.unreadCountNotifier,
+                        builder: (context, unread, _) {
+                          return BouncingTap(
+                            onTap: () => NotificationsBottomSheet.show(context),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: context.cardColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: context.borderColor),
+                                  ),
+                                  child: Icon(
+                                    Icons.notifications_none_rounded,
+                                    color: context.textPrimary,
+                                    size: 20,
+                                  ),
+                                ),
+                                if (unread > 0)
+                                  Positioned(
+                                    top: -2,
+                                    right: -2,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.error,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      constraints: const BoxConstraints(
+                                        minWidth: 16,
+                                        minHeight: 16,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          unread > 9 ? '9+' : '$unread',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            height: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 8),
 

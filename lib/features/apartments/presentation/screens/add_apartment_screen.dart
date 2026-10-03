@@ -11,6 +11,7 @@ import 'package:sakani/core/widgets/gradient_button.dart';
 import 'package:sakani/core/widgets/section_header.dart';
 import 'package:sakani/core/widgets/app_snackbar.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
 
 class AddApartmentScreen extends StatefulWidget {
   const AddApartmentScreen({super.key});
@@ -68,13 +69,13 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_images.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يجب إضافة 3 صور على الأقل للشقة')),
+        SnackBar(content: Text(context.tr('minImagesRequired'))),
       );
       return;
     }
     if (_availableRentTypes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يجب اختيار نوع إيجار واحد على الأقل')),
+        SnackBar(content: Text(context.tr('selectRentTypeMin'))),
       );
       return;
     }
@@ -116,7 +117,7 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
     } catch (_) {}
     AppSnackbar.show(
       context,
-      message: 'تم إضافة الشقة بنجاح',
+      message: context.tr('propertyAddedSuccess'),
       type: ToastType.success,
     );
     Navigator.pop(context);
@@ -125,7 +126,7 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('إضافة شقة جديدة')),
+      appBar: AppBar(title: Text(context.tr('addNewApartment'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -134,60 +135,60 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Apartment Info ──
-              const SectionHeader(title: 'معلومات الشقة'),
+              SectionHeader(title: context.tr('propertyInfo')),
               const SizedBox(height: 4),
               TextFormField(
                 controller: _titleCtl,
-                decoration: const InputDecoration(labelText: 'عنوان الشقة'),
+                decoration: InputDecoration(labelText: context.tr('propertyTitle')),
                 validator: (v) =>
-                    v != null && v.isNotEmpty ? null : 'العنوان مطلوب',
+                    v != null && v.isNotEmpty ? null : context.tr('propertyTitleRequired'),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _descCtl,
-                decoration: const InputDecoration(labelText: 'الوصف'),
+                decoration: InputDecoration(labelText: context.tr('propertyDescription')),
                 maxLines: 3,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _cityCtl,
-                decoration: const InputDecoration(
-                  labelText: 'المدينة / المحافظة',
-                  hintText: 'مثال: القاهرة، الجيزة، الإسكندرية، الرياض...',
-                  prefixIcon: Icon(Icons.location_city_rounded),
+                decoration: InputDecoration(
+                  labelText: context.tr('cityGovernorate'),
+                  hintText: context.tr('cityPlaceholder'),
+                  prefixIcon: const Icon(Icons.location_city_rounded),
                 ),
                 validator: (v) =>
-                    v != null && v.trim().isNotEmpty ? null : 'يرجى كتابة اسم المدينة',
+                    v != null && v.trim().isNotEmpty ? null : context.tr('cityRequired'),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _addressCtl,
-                decoration: const InputDecoration(
-                  labelText: 'العنوان التفصيلي / الحي والشارع',
-                  prefixIcon: Icon(Icons.place_outlined),
+                decoration: InputDecoration(
+                  labelText: context.tr('detailedAddress'),
+                  prefixIcon: const Icon(Icons.place_outlined),
                 ),
                 validator: (v) =>
-                    v != null && v.trim().isNotEmpty ? null : 'العنوان التفصيلي مطلوب',
+                    v != null && v.trim().isNotEmpty ? null : context.tr('detailedAddressRequired'),
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _phoneCtl,
-                decoration: const InputDecoration(
-                  labelText: 'رقم الجوال للتواصل',
-                  prefixIcon: Icon(Icons.phone_outlined),
+                decoration: InputDecoration(
+                  labelText: context.tr('phoneContact'),
+                  prefixIcon: const Icon(Icons.phone_outlined),
                 ),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: 28),
 
               // ── Details ──
-              const SectionHeader(title: 'التفاصيل'),
+              SectionHeader(title: context.tr('propertySpecs')),
               const SizedBox(height: 4),
               Row(
                 children: [
                   Expanded(
                     child: _Counter(
-                      label: 'غرف النوم',
+                      label: context.tr('bedroomsCount'),
                       value: _bedrooms,
                       onChanged: (v) => setState(() => _bedrooms = v),
                     ),
@@ -195,7 +196,7 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _Counter(
-                      label: 'الحمامات',
+                      label: context.tr('bathroomsCount'),
                       value: _bathrooms,
                       onChanged: (v) => setState(() => _bathrooms = v),
                     ),
@@ -207,7 +208,7 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
                 children: [
                   Expanded(
                     child: _Counter(
-                      label: 'أقصى ضيوف',
+                      label: context.tr('maxGuestsCount'),
                       value: _maxGuests,
                       onChanged: (v) => setState(() => _maxGuests = v),
                     ),
@@ -215,8 +216,8 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'المساحة (م²)',
+                      decoration: InputDecoration(
+                        labelText: context.tr('areaSqm'),
                       ),
                       keyboardType: TextInputType.number,
                       initialValue: '100',
@@ -228,7 +229,7 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
               const SizedBox(height: 28),
 
               // ── Images ──
-              const SectionHeader(title: 'صور الشقة (3 صور على الأقل)'),
+              SectionHeader(title: context.tr('propertyImagesMin')),
               const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
@@ -293,23 +294,29 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
               const SizedBox(height: 28),
 
               // ── Rent Types & Prices ──
-              const SectionHeader(title: 'نوع الإيجار والأسعار'),
+              SectionHeader(title: context.tr('rentTypeAndPrices')),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 12,
-                children: ['يومي', 'شهري', 'سنوي'].map((type) {
-                  final selected = _availableRentTypes.contains(type);
+                children: [
+                  {'key': 'يومي', 'label': context.tr('daily')},
+                  {'key': 'شهري', 'label': context.tr('monthly')},
+                  {'key': 'سنوي', 'label': context.tr('yearly')},
+                ].map((item) {
+                  final key = item['key']!;
+                  final label = item['label']!;
+                  final selected = _availableRentTypes.contains(key);
                   return FilterChip(
-                    label: Text(type),
+                    label: Text(label),
                     selected: selected,
                     selectedColor: context.accentColor.withValues(alpha: 0.2),
                     checkmarkColor: context.accentColor,
                     onSelected: (v) {
                       setState(() {
                         if (v) {
-                          _availableRentTypes.add(type);
+                          _availableRentTypes.add(key);
                         } else {
-                          _availableRentTypes.remove(type);
+                          _availableRentTypes.remove(key);
                         }
                       });
                     },
@@ -320,42 +327,42 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
               if (_availableRentTypes.contains('يومي')) ...[
                 TextFormField(
                   controller: _dailyPriceCtl,
-                  decoration: const InputDecoration(labelText: 'السعر اليومي'),
+                  decoration: InputDecoration(labelText: context.tr('dailyPrice')),
                   keyboardType: TextInputType.number,
                   validator: (v) =>
-                      v != null && v.isNotEmpty ? null : 'السعر اليومي مطلوب',
+                      v != null && v.isNotEmpty ? null : context.tr('dailyPriceRequired'),
                 ),
                 const SizedBox(height: 12),
               ],
               if (_availableRentTypes.contains('شهري')) ...[
                 TextFormField(
                   controller: _monthlyPriceCtl,
-                  decoration: const InputDecoration(labelText: 'السعر الشهري'),
+                  decoration: InputDecoration(labelText: context.tr('monthlyPrice')),
                   keyboardType: TextInputType.number,
                   validator: (v) =>
-                      v != null && v.isNotEmpty ? null : 'السعر الشهري مطلوب',
+                      v != null && v.isNotEmpty ? null : context.tr('monthlyPriceRequired'),
                 ),
                 const SizedBox(height: 12),
               ],
               if (_availableRentTypes.contains('سنوي')) ...[
                 TextFormField(
                   controller: _yearlyPriceCtl,
-                  decoration: const InputDecoration(labelText: 'السعر السنوي'),
+                  decoration: InputDecoration(labelText: context.tr('yearlyPrice')),
                   keyboardType: TextInputType.number,
                   validator: (v) =>
-                      v != null && v.isNotEmpty ? null : 'السعر السنوي مطلوب',
+                      v != null && v.isNotEmpty ? null : context.tr('yearlyPriceRequired'),
                 ),
                 const SizedBox(height: 12),
               ],
               TextFormField(
                 controller: _depositCtl,
-                decoration: const InputDecoration(labelText: 'التأمين '),
+                decoration: InputDecoration(labelText: context.tr('securityDeposit')),
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 28),
 
               // ── Amenities ──
-              const SectionHeader(title: 'الخدمات والمرافق'),
+              SectionHeader(title: context.tr('amenitiesAndFacilities')),
               const SizedBox(height: 4),
               Wrap(
                 spacing: 8,
@@ -401,7 +408,7 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
               // ── Submit Button ──
               Consumer<ApartmentProvider>(
                 builder: (context, prov, _) => GradientButton(
-                  text: 'إضافة الشقة',
+                  text: context.tr('submitAddProperty'),
                   isLoading: prov.isLoading,
                   onPressed: prov.isLoading ? null : _submit,
                   icon: Icons.add_home_rounded,

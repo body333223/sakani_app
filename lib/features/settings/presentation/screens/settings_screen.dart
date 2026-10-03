@@ -55,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // ── 3. Appearance & Language ──
-          _SectionTitle(title: 'المظهر واللغة', icon: Icons.palette_outlined),
+          _SectionTitle(title: tr.tr('appearanceAndLanguage'), icon: Icons.palette_outlined),
           const SizedBox(height: 10),
           _StyledCard(
             child: Column(
@@ -66,7 +66,7 @@ class SettingsScreen extends StatelessWidget {
                       : Icons.light_mode_rounded,
                   iconColor: context.accentColor,
                   title: tr.tr('darkMode'),
-                  subtitle: context.isDark ? 'الوضع الداكن مفعّل' : 'الوضع الفاتح مفعّل',
+                  subtitle: context.isDark ? tr.tr('darkModeActive') : tr.tr('lightModeActive'),
                   trailing: Switch.adaptive(
                     value: context.isDark,
                     activeThumbColor: context.accentColor,
@@ -84,7 +84,7 @@ class SettingsScreen extends StatelessWidget {
                   icon: Icons.translate_rounded,
                   iconColor: context.accentColor,
                   title: tr.tr('language'),
-                  subtitle: lang == 'ar' ? 'اللغة الحالية: العربية' : 'Current: English',
+                  subtitle: tr.tr('currentLanguage'),
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
@@ -112,7 +112,7 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // ── 4. Account & Security ──
-          _SectionTitle(title: 'الأمان والتنبيهات', icon: Icons.security_rounded),
+          _SectionTitle(title: tr.tr('securityAndAlerts'), icon: Icons.security_rounded),
           const SizedBox(height: 10),
           _StyledCard(
             child: Column(
@@ -120,8 +120,8 @@ class SettingsScreen extends StatelessWidget {
                 _SettingTile(
                   icon: Icons.lock_outline_rounded,
                   iconColor: context.accentColor,
-                  title: 'تغيير كلمة المرور',
-                  subtitle: 'حماية وتأمين الحساب',
+                  title: tr.tr('changePassword'),
+                  subtitle: tr.tr('changePasswordDesc'),
                   onTap: () => _showChangePasswordDialog(context),
                 ),
                 Padding(
@@ -131,8 +131,8 @@ class SettingsScreen extends StatelessWidget {
                 _SettingTile(
                   icon: Icons.fingerprint_rounded,
                   iconColor: context.accentColor,
-                  title: 'تسجيل الدخول بالبصمة / Face ID',
-                  subtitle: 'تفعيل الدخول السريع عبر البصمة الحيوية',
+                  title: tr.tr('biometricLogin'),
+                  subtitle: tr.tr('biometricLoginDesc'),
                   trailing: Switch.adaptive(
                     value: BiometricService.isBiometricLoginEnabled(),
                     activeThumbColor: context.accentColor,
@@ -140,13 +140,13 @@ class SettingsScreen extends StatelessWidget {
                     onChanged: (val) async {
                       if (val) {
                         final authOk = await BiometricService.authenticate(
-                          reason: 'يرجى التحقق من البصمة لتفعيل الدخول السريع',
+                          reason: tr.tr('biometricAuthPrompt'),
                         );
                         if (authOk) {
                           BiometricService.setBiometricLoginEnabled(true);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('تم تفعيل تسجيل الدخول بالبصمة بنجاح 🌟')),
+                              SnackBar(content: Text(tr.tr('biometricEnabled'))),
                             );
                           }
                         }
@@ -154,7 +154,7 @@ class SettingsScreen extends StatelessWidget {
                         BiometricService.setBiometricLoginEnabled(false);
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('تم تعطيل تسجيل الدخول بالبصمة')),
+                            SnackBar(content: Text(tr.tr('biometricDisabled'))),
                           );
                         }
                       }
@@ -168,16 +168,16 @@ class SettingsScreen extends StatelessWidget {
                 _SettingTile(
                   icon: Icons.notifications_none_rounded,
                   iconColor: context.accentColor,
-                  title: 'إشعارات التطبيق',
-                  subtitle: 'تنبيهات الحجوزات والرسائل الجديدة',
+                  title: tr.tr('appNotifications'),
+                  subtitle: tr.tr('appNotificationsDesc'),
                   trailing: Switch.adaptive(
                     value: true,
                     activeThumbColor: context.accentColor,
                     onChanged: (val) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('تم تحديث إعدادات الإشعارات'),
-                          duration: Duration(seconds: 1),
+                        SnackBar(
+                          content: Text(tr.tr('notifSettingsUpdated')),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
                     },
@@ -190,7 +190,7 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
 
           // ── 5. Support & About ──
-          _SectionTitle(title: 'الدعم والمعلومات', icon: Icons.help_outline_rounded),
+          _SectionTitle(title: tr.tr('supportAndInfo'), icon: Icons.help_outline_rounded),
           const SizedBox(height: 10),
           _StyledCard(
             child: Column(
@@ -198,8 +198,8 @@ class SettingsScreen extends StatelessWidget {
                 _SettingTile(
                   icon: Icons.support_agent_rounded,
                   iconColor: Colors.teal,
-                  title: 'الدعم الفني المباشر (Live Support 🎧)',
-                  subtitle: 'محادثة حية فورية ومتابعة مع موظفي الشيفت',
+                  title: tr.tr('liveSupport'),
+                  subtitle: tr.tr('liveSupportDesc'),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -214,8 +214,8 @@ class SettingsScreen extends StatelessWidget {
                 _SettingTile(
                   icon: Icons.description_outlined,
                   iconColor: context.accentColor,
-                  title: 'الشروط والأحكام والسياسات',
-                  subtitle: 'شروط الاستخدام وسياسة الخصوصية',
+                  title: tr.tr('termsAndPolicies'),
+                  subtitle: tr.tr('termsAndPoliciesDesc'),
                   onTap: () => _showTermsDialog(context),
                 ),
                 Padding(
@@ -225,8 +225,8 @@ class SettingsScreen extends StatelessWidget {
                 _SettingTile(
                   icon: Icons.info_outline_rounded,
                   iconColor: context.accentColor,
-                  title: 'عن تطبيق سكني',
-                  subtitle: 'الإصدار 1.0.0 (النسخة الفاخرة)',
+                  title: tr.tr('aboutSakani'),
+                  subtitle: tr.tr('version'),
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
@@ -260,7 +260,7 @@ class SettingsScreen extends StatelessWidget {
               icon: Icons.logout_rounded,
               iconColor: AppColors.error,
               title: tr.tr('logout'),
-              subtitle: 'تسجيل الخروج من الحساب الحالي',
+              subtitle: tr.tr('logoutDesc'),
               textColor: AppColors.error,
               trailing: const Icon(
                 Icons.arrow_forward_ios_rounded,
@@ -349,9 +349,9 @@ class SettingsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'رصيد المحفظة',
-                    style: TextStyle(
+                  Text(
+                    context.tr('walletBalance'),
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
                       fontWeight: FontWeight.w600,
@@ -370,7 +370,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'ج.م',
+                        context.tr('currency'),
                         style: TextStyle(
                           color: context.textPrimary,
                           fontSize: 11,
@@ -441,18 +441,18 @@ class SettingsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'توثيق الهوية (KYC)',
-                    style: TextStyle(
+                  Text(
+                    context.tr('kycVerification'),
+                    style: const TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'موثق بالكامل 🌟',
-                    style: TextStyle(
+                  Text(
+                    context.tr('fullyVerified'),
+                    style: const TextStyle(
                       color: AppColors.success,
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
@@ -475,25 +475,25 @@ class SettingsScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBr),
-        title: const Text('تغيير كلمة المرور', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(context.tr('changePassword'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: oldCtl,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'كلمة المرور الحالية',
-                prefixIcon: Icon(Icons.lock_outline_rounded),
+              decoration: InputDecoration(
+                labelText: context.tr('currentPassword'),
+                prefixIcon: const Icon(Icons.lock_outline_rounded),
               ),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: newCtl,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'كلمة المرور الجديدة',
-                prefixIcon: Icon(Icons.lock_reset_rounded),
+              decoration: InputDecoration(
+                labelText: context.tr('newPassword'),
+                prefixIcon: const Icon(Icons.lock_reset_rounded),
               ),
             ),
           ],
@@ -501,19 +501,19 @@ class SettingsScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: TextStyle(color: context.textSecondary)),
+            child: Text(context.tr('cancel'), style: TextStyle(color: context.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('تم تحديث كلمة المرور بنجاح'),
+                SnackBar(
+                  content: Text(context.tr('passwordUpdatedSuccess')),
                   backgroundColor: AppColors.success,
                 ),
               );
             },
-            child: const Text('تحديث'),
+            child: Text(context.isArabic ? 'تحديث' : 'Update'),
           ),
         ],
       ),
@@ -526,14 +526,14 @@ class SettingsScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBr),
-        title: const Text('مركز الدعم والمساعدة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(context.tr('supportAndInfo'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.chat_bubble_outline_rounded, color: Colors.teal),
-              title: const Text('المحادثة الفورية مع الدعم'),
-              subtitle: const Text('متاح على مدار 24 ساعة'),
+              title: Text(context.tr('liveSupport')),
+              subtitle: Text(context.isArabic ? 'متاح على مدار 24 ساعة' : 'Available 24/7'),
               onTap: () {
                 Navigator.pop(ctx);
                 Navigator.push(
@@ -544,14 +544,14 @@ class SettingsScreen extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.phone_outlined, color: Colors.green),
-              title: const Text('الخط الساخن: 19888'),
-              subtitle: const Text('للحالات الطارئة والاستفسارات'),
+              title: Text(context.isArabic ? 'الخط الساخن: 19888' : 'Hotline: 19888'),
+              subtitle: Text(context.isArabic ? 'للحالات الطارئة والاستفسارات' : 'Emergency & inquiries'),
               onTap: () => Navigator.pop(ctx),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('إغلاق')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.tr('close'))),
         ],
       ),
     );
@@ -563,15 +563,15 @@ class SettingsScreen extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBr),
-        title: const Text('الشروط والأحكام', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        content: const SingleChildScrollView(
+        title: Text(context.tr('termsAndPolicies'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        content: SingleChildScrollView(
           child: Text(
-            'تطبيق سكني يضمن حقوق المستأجر والمالك وفقاً للقوانين المصرية الرسمية ومعايير الأمان المالي. جميع الحجوزات مشمولة بضمان استرداد الأموال وتوثيق الهوية الرقمي.',
-            style: TextStyle(height: 1.5),
+            context.tr('termsDialogContent'),
+            style: const TextStyle(height: 1.5),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.isArabic ? 'حسناً' : 'OK')),
         ],
       ),
     );
@@ -594,14 +594,14 @@ class SettingsScreen extends StatelessWidget {
               child: const Icon(Icons.logout_rounded, color: AppColors.error, size: 20),
             ),
             const SizedBox(width: 12),
-            const Text('تسجيل الخروج', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(context.tr('logoutConfirmTitle'), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           ],
         ),
-        content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج من تطبيق سكني؟'),
+        content: Text(context.tr('logoutConfirmMessage')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: TextStyle(color: context.textSecondary)),
+            child: Text(context.tr('cancel'), style: TextStyle(color: context.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -613,7 +613,7 @@ class SettingsScreen extends StatelessWidget {
               auth.logout();
               Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
             },
-            child: const Text('تسجيل الخروج'),
+            child: Text(context.tr('logout')),
           ),
         ],
       ),
@@ -656,7 +656,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
                 Text(
-                  'تغيير الصورة الشخصية',
+                  context.tr('changePhoto'),
                   style: TextStyle(
                     color: context.textPrimary,
                     fontSize: 18,
@@ -674,7 +674,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                     child: Icon(Icons.camera_alt_rounded, color: context.accentColor),
                   ),
                   title: Text(
-                    'التقاط صورة بالكاميرا',
+                    context.tr('takePhoto'),
                     style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w600),
                   ),
                   onTap: () async {
@@ -689,8 +689,8 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                       await auth.updateProfilePhoto(image.path);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('تم تحديث الصورة الشخصية بنجاح 🌟'),
+                          SnackBar(
+                            content: Text(context.tr('photoUpdatedSuccess')),
                             backgroundColor: AppColors.success,
                           ),
                         );
@@ -708,7 +708,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                     child: Icon(Icons.photo_library_rounded, color: context.accentColor),
                   ),
                   title: Text(
-                    'اختيار من ألبوم الصور',
+                    context.tr('chooseFromGallery'),
                     style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w600),
                   ),
                   onTap: () async {
@@ -723,8 +723,8 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                       await auth.updateProfilePhoto(image.path);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('تم تحديث الصورة الشخصية بنجاح 🌟'),
+                          SnackBar(
+                            content: Text(context.tr('photoUpdatedSuccess')),
                             backgroundColor: AppColors.success,
                           ),
                         );
@@ -750,27 +750,27 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
         return AlertDialog(
           backgroundColor: context.surfaceColor,
           shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBr),
-          title: const Text(
-            'تعديل البيانات الشخصية',
-            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+          title: Text(
+            context.tr('editProfileTitle'),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameCtl,
-                decoration: const InputDecoration(
-                  labelText: 'الاسم الكامل',
-                  prefixIcon: Icon(Icons.person_outline_rounded),
+                decoration: InputDecoration(
+                  labelText: context.tr('fullName'),
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
                 ),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: phoneCtl,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'رقم الهاتف',
-                  prefixIcon: Icon(Icons.phone_outlined),
+                decoration: InputDecoration(
+                  labelText: context.tr('phone'),
+                  prefixIcon: const Icon(Icons.phone_outlined),
                 ),
               ),
             ],
@@ -778,7 +778,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('إلغاء', style: TextStyle(color: context.textSecondary)),
+              child: Text(context.tr('cancel'), style: TextStyle(color: context.textSecondary)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -796,8 +796,8 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                     SnackBar(
                       content: Text(
                         success
-                            ? 'تم تحديث البيانات الشخصية بنجاح 🌟'
-                            : 'حدث خطأ أثناء التحديث',
+                            ? context.tr('profileUpdatedSuccess')
+                            : context.tr('updateError'),
                       ),
                       backgroundColor:
                           success ? AppColors.success : AppColors.error,
@@ -805,7 +805,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                   );
                 }
               },
-              child: const Text('حفظ التعديلات'),
+              child: Text(context.tr('save')),
             ),
           ],
         );
@@ -937,7 +937,9 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      user.phone.isNotEmpty ? user.phone : 'لا يوجد رقم مسجل',
+                      user.phone.isNotEmpty
+                          ? user.phone
+                          : (context.isArabic ? 'لا يوجد رقم مسجل' : 'No registered phone'),
                       style: TextStyle(
                         color: context.textSecondary.withValues(alpha: 0.8),
                         fontSize: 12,
@@ -954,7 +956,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        user.isOwner ? '🏢 مالك عقارات موثق' : '👤 مستأجر موثق',
+                        user.isOwner ? context.tr('verifiedOwner') : context.tr('verifiedTenant'),
                         style: TextStyle(
                           color: context.accentColor,
                           fontSize: 11,
@@ -975,7 +977,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'البيانات الشخصية مكتملة ومؤكدة',
+                context.tr('profileVerifiedDesc'),
                 style: TextStyle(
                   fontSize: 12,
                   color: context.textSecondary,
@@ -992,7 +994,7 @@ class _UnifiedHeroProfileCard extends StatelessWidget {
                       Icon(Icons.edit_rounded, size: 14, color: context.accentColor),
                       const SizedBox(width: 4),
                       Text(
-                        'تعديل البيانات',
+                        context.tr('editProfile'),
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -1054,7 +1056,7 @@ class _GuestProfileCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'مرحباً بك في سكني',
+                  tr.tr('welcomeToSakani'),
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
@@ -1063,7 +1065,7 @@ class _GuestProfileCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'سجل دخولك للاستمتاع بجميع المزايا',
+                  tr.tr('welcomeToSakaniSub'),
                   style: TextStyle(fontSize: 12, color: context.textSecondary),
                 ),
               ],
@@ -1075,7 +1077,7 @@ class _GuestProfileCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               minimumSize: Size.zero,
             ),
-            child: const Text('تسجيل'),
+            child: Text(tr.tr('login')),
           ),
         ],
       ),

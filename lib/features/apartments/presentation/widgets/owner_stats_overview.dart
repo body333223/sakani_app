@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/widgets/glass_card.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
 
 class OwnerStatsOverview extends StatelessWidget {
   final int totalProperties;
@@ -80,9 +81,9 @@ class OwnerStatsOverview extends StatelessWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'أرباح المحفظة المحققة',
-                              style: TextStyle(
+                            Text(
+                              context.tr('realizedEarnings'),
+                              style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -102,9 +103,9 @@ class OwnerStatsOverview extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Text(
-                                  'ج.م',
-                                  style: TextStyle(
+                                Text(
+                                  context.tr('currency'),
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -129,9 +130,9 @@ class OwnerStatsOverview extends StatelessWidget {
                           elevation: 0,
                         ),
                         icon: const Icon(Icons.arrow_outward_rounded, size: 16),
-                        label: const Text(
-                          'محفظتي',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        label: Text(
+                          context.tr('myWallet'),
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                         ),
                       ),
                   ],
@@ -154,14 +155,14 @@ class OwnerStatsOverview extends StatelessWidget {
                           children: [
                             const Icon(Icons.hourglass_top_rounded, color: Colors.amber, size: 16),
                             const SizedBox(width: 8),
-                            const Text(
-                              'أرباح قيد التسوية (حجوزات نشطة):',
-                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                            Text(
+                              context.tr('pendingEscrow'),
+                              style: const TextStyle(color: Colors.white70, fontSize: 12),
                             ),
                           ],
                         ),
                         Text(
-                          '${pendingRevenue.round()} ج.م',
+                          '${pendingRevenue.round()} ${context.tr('currency')}',
                           style: const TextStyle(
                             color: Colors.amber,
                             fontWeight: FontWeight.w800,
@@ -182,21 +183,21 @@ class OwnerStatsOverview extends StatelessWidget {
             children: [
               Expanded(
                 child: _StatCard(
-                  title: 'إجمالي العقارات',
+                  title: context.tr('totalProperties'),
                   value: '$totalProperties',
                   icon: Icons.apartment_rounded,
                   color: context.accentColor,
-                  subtitle: '$availableProperties متاح للحجز',
+                  subtitle: '$availableProperties ${context.tr('availableForRent')}',
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _StatCard(
-                  title: 'نسبة الإشغال',
+                  title: context.tr('occupancyRate'),
                   value: '$occupancyRate%',
                   icon: Icons.pie_chart_outline_rounded,
                   color: occupancyRate > 0 ? AppColors.success : Colors.grey,
-                  subtitle: '$activeBookings حجوزات جارية',
+                  subtitle: '$activeBookings ${context.tr('activeBookingsCount')}',
                 ),
               ),
             ],

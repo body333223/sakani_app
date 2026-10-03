@@ -17,6 +17,8 @@ import 'package:sakani/features/bookings/presentation/widgets/owner_booking_card
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
 import 'package:sakani/features/wallet/data/services/wallet_service.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
+import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
@@ -66,7 +68,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'تم تأكيد حجز "${b.apartmentTitle}" بنجاح! تم حجز العقار من ${b.startDate.year}/${b.startDate.month}/${b.startDate.day} وإيداع ${netEarnings.round()} ج.م في محفظتك.',
+            context.tr('bookingConfirmedSuccess', [b.apartmentTitle, netEarnings.round().toString()]),
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
@@ -77,12 +79,22 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final titles = ['لوحة التحكم', 'عقاراتي', 'إدارة الحجوزات', 'المحادثات', 'الإعدادات'];
+    final lang = context.watch<LocaleProvider>().lang;
+    final tr = AppLocalizations(lang);
+    final isAr = lang == 'ar';
+
+    final titles = [
+      tr.tr('ownerDashboard'),
+      tr.tr('myProperties'),
+      tr.tr('manageBookings'),
+      tr.tr('chats'),
+      tr.tr('myAccount'),
+    ];
 
     final pages = [
-      _buildOverviewTab(),
-      _buildApartmentsTab(),
-      _buildBookingsTab(),
+      _buildOverviewTab(tr),
+      _buildApartmentsTab(tr),
+      _buildBookingsTab(tr),
       const ChatListScreen(isEmbedded: true),
       const SettingsScreen(isEmbedded: true),
     ];
@@ -101,33 +113,52 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         ),
         actions: [
           IconButton(
+            icon: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: context.accentColor.withValues(alpha: 0.6)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                isAr ? 'EN' : 'عربي',
+                style: TextStyle(
+                  color: context.accentColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            onPressed: () => context.read<LocaleProvider>().toggleLang(),
+            tooltip: tr.tr('changeLanguage'),
+          ),
+          IconButton(
             icon: Icon(Icons.account_balance_wallet_rounded, color: context.accentColor),
             onPressed: () => Navigator.pushNamed(context, '/wallet'),
-            tooltip: 'المحفظة الرقمية',
+            tooltip: tr.tr('wallet'),
           ),
           if (_currentIndex == 0 || _currentIndex == 1)
             IconButton(
               icon: Icon(Icons.add_circle_outline_rounded, color: context.accentColor),
               onPressed: () => Navigator.pushNamed(context, '/add-apartment'),
-              tooltip: 'إضافة عقار جديد',
+              tooltip: tr.tr('addApartment'),
             ),
         ],
       ),
       body: IndexedStack(index: _currentIndex, children: pages),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: _buildBottomNav(tr),
       floatingActionButton: _currentIndex == 1
           ? FloatingActionButton.extended(
               onPressed: () => Navigator.pushNamed(context, '/add-apartment'),
               backgroundColor: context.accentColor,
               foregroundColor: const Color(0xFF080C14),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('إضافة عقار', style: TextStyle(fontWeight: FontWeight.bold)),
+              label: Text(tr.tr('addApartment'), style: const TextStyle(fontWeight: FontWeight.bold)),
             )
           : null,
     );
   }
 
-  Widget _buildOverviewTab() {
+  Widget _buildOverviewTab(AppLocalizations tr) {
     return BlocBuilder<ApartmentCubit, ApartmentState>(
       builder: (context, aptState) {
         final apartments = aptState.ownerApartments;
@@ -175,7 +206,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           child: ElevatedButton.icon(
                             onPressed: () => Navigator.pushNamed(context, '/add-apartment'),
                             icon: const Icon(Icons.add_home_rounded, size: 18),
-                            label: const Text('إضافة عقار جديد'),
+                            label: Text(tr.tr('addApartment')),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -183,7 +214,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                           child: OutlinedButton.icon(
                             onPressed: () => setState(() => _currentIndex = 1),
                             icon: const Icon(Icons.apartment_rounded, size: 18),
-                            label: const Text('عرض عقاراتي'),
+                            label: Text(tr.tr('viewMyProperties')),
                           ),
                         ),
                       ],
@@ -192,19 +223,19 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   const SizedBox(height: 24),
 
                   // Recent bookings
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SectionHeader(title: 'أحدث طلبات الحجز'),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SectionHeader(title: tr.tr('recentBookingRequests')),
                   ),
                   const SizedBox(height: 8),
 
                   if (bookings.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(24),
+                    Padding(
+                      padding: const EdgeInsets.all(24),
                       child: EmptyState(
                         icon: Icons.event_busy_rounded,
-                        title: 'لا توجد طلبات حجز بعد',
-                        subtitle: 'ستظهر طلبات المستأجرين هنا فور إرسالها',
+                        title: tr.tr('noBookingsYet'),
+                        subtitle: tr.tr('noBookingsSubtitle'),
                       ),
                     )
                   else
@@ -231,7 +262,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     );
   }
 
-  Widget _buildApartmentsTab() {
+  Widget _buildApartmentsTab(AppLocalizations tr) {
     return BlocBuilder<ApartmentCubit, ApartmentState>(
       builder: (context, state) {
         final apartments = state.ownerApartments;
@@ -248,17 +279,17 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   padding: const EdgeInsets.all(24),
                   children: [
                     const SizedBox(height: 40),
-                    const EmptyState(
+                    EmptyState(
                       icon: Icons.holiday_village_outlined,
-                      title: 'لم تقم بإضافة عقارات بعد',
-                      subtitle: 'اضغط على زر "إضافة عقار" لنشر شقتك السكنية الأولى والبدء في استقبال المستأجرين',
+                      title: tr.tr('noPropertiesYet'),
+                      subtitle: tr.tr('noPropertiesSubtitle'),
                     ),
                     const SizedBox(height: 24),
                     Center(
                       child: ElevatedButton.icon(
                         onPressed: () => Navigator.pushNamed(context, '/add-apartment'),
                         icon: const Icon(Icons.add_rounded),
-                        label: const Text('إضافة عقار الآن'),
+                        label: Text(tr.tr('addPropertyNow')),
                       ),
                     ),
                   ],
@@ -277,13 +308,13 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         context.read<ApartmentCubit>().updatePrice(apt.id, newPrice);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('تم تحديث سعر العقار إلى ${newPrice.round()} ج.م شهرياً بنجاح'),
+                            content: Text(tr.tr('propertyPriceUpdated', [newPrice.round().toString()])),
                             backgroundColor: AppColors.success,
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
                       },
-                      onDelete: () => _confirmDelete(context, apt.id, apt.title),
+                      onDelete: () => _confirmDelete(context, apt.id, apt.title, tr),
                       onTap: () {
                         final model = apt is ApartmentModel ? apt : ApartmentModel.fromEntity(apt);
                         Navigator.pushNamed(
@@ -300,18 +331,18 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, String id, String title) {
+  void _confirmDelete(BuildContext context, String id, String title, AppLocalizations tr) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: context.surfaceColor,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.lgBr),
-        title: const Text('حذف العقار', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('هل أنت متأكد من حذف "$title"؟ لا يمكن التراجع عن هذا الإجراء.'),
+        title: Text(tr.tr('deleteProperty'), style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(tr.tr('deleteConfirm', [title])),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: TextStyle(color: context.textSecondary)),
+            child: Text(tr.tr('cancel'), style: TextStyle(color: context.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
@@ -319,14 +350,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               Navigator.pop(ctx);
               context.read<ApartmentCubit>().deleteApartment(id);
             },
-            child: const Text('حذف'),
+            child: Text(tr.tr('delete')),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBookingsTab() {
+  Widget _buildBookingsTab(AppLocalizations tr) {
     return Consumer<BookingProvider>(
       builder: (context, bookProv, _) {
         final allBookings = bookProv.ownerBookings;
@@ -334,7 +365,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             ? allBookings
             : allBookings.where((b) => b.status == _bookingFilter).toList();
 
-        final filterOptions = ['الكل', 'قيد الانتظار', 'نشط', 'مقبول', 'مكتمل', 'ملغي'];
+        final filterOptions = [
+          {'key': 'الكل', 'label': tr.tr('filterAll')},
+          {'key': 'قيد الانتظار', 'label': tr.tr('filterPending')},
+          {'key': 'نشط', 'label': tr.tr('filterActive')},
+          {'key': 'مقبول', 'label': tr.tr('filterAccepted')},
+          {'key': 'مكتمل', 'label': tr.tr('filterCompleted')},
+          {'key': 'ملغي', 'label': tr.tr('filterCancelled')},
+        ];
 
         return Column(
           children: [
@@ -347,12 +385,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 itemCount: filterOptions.length,
                 itemBuilder: (context, index) {
                   final opt = filterOptions[index];
-                  final isSelected = _bookingFilter == opt;
+                  final isSelected = _bookingFilter == opt['key'];
 
                   return Padding(
                     padding: const EdgeInsets.only(left: 8),
                     child: ChoiceChip(
-                      label: Text(opt),
+                      label: Text(opt['label']!),
                       selected: isSelected,
                       selectedColor: context.accentColor.withValues(alpha: 0.18),
                       backgroundColor: context.cardColor,
@@ -363,7 +401,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                       ),
                       shape: RoundedRectangleBorder(borderRadius: AppRadius.pillBr),
                       onSelected: (val) {
-                        if (val) setState(() => _bookingFilter = opt);
+                        if (val) setState(() => _bookingFilter = opt['key']!);
                       },
                     ),
                   );
@@ -382,12 +420,12 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 },
                 child: filtered.isEmpty
                     ? ListView(
-                        children: const [
-                          SizedBox(height: 60),
+                        children: [
+                          const SizedBox(height: 60),
                           EmptyState(
                             icon: Icons.event_busy_rounded,
-                            title: 'لا توجد حجوزات في هذا التصنيف',
-                            subtitle: 'اختر تصنيفاً آخر أو انتظر طلبات جديدة',
+                            title: tr.tr('noBookingsCategory'),
+                            subtitle: tr.tr('noBookingsCategorySub'),
                           ),
                         ],
                       )
@@ -411,7 +449,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     );
   }
 
-  Widget _buildBottomNav() {
+  Widget _buildBottomNav(AppLocalizations tr) {
     final bookings = context.watch<BookingProvider>().ownerBookings;
     final pendingCount = bookings.where((b) => b.status == 'قيد الانتظار').length;
 
@@ -419,31 +457,31 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
       currentIndex: _currentIndex,
       onTap: (index) => setState(() => _currentIndex = index),
       items: [
-        const LuxuryNavItem(
+        LuxuryNavItem(
           selectedIcon: Icons.dashboard_rounded,
           unselectedIcon: Icons.dashboard_outlined,
-          label: 'الرئيسية',
+          label: tr.tr('home'),
         ),
-        const LuxuryNavItem(
+        LuxuryNavItem(
           selectedIcon: Icons.apartment_rounded,
           unselectedIcon: Icons.apartment_outlined,
-          label: 'عقاراتي',
+          label: tr.tr('myProperties'),
         ),
         LuxuryNavItem(
           selectedIcon: Icons.calendar_month_rounded,
           unselectedIcon: Icons.calendar_month_outlined,
-          label: 'الحجوزات',
+          label: tr.tr('manageBookings'),
           badgeCount: pendingCount > 0 ? pendingCount : null,
         ),
-        const LuxuryNavItem(
+        LuxuryNavItem(
           selectedIcon: Icons.chat_bubble_rounded,
           unselectedIcon: Icons.chat_bubble_outline_rounded,
-          label: 'المحادثات',
+          label: tr.tr('chats'),
         ),
-        const LuxuryNavItem(
+        LuxuryNavItem(
           selectedIcon: Icons.person_rounded,
           unselectedIcon: Icons.person_outline_rounded,
-          label: 'حسابي',
+          label: tr.tr('myAccount'),
         ),
       ],
     );

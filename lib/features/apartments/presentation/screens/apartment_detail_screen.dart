@@ -12,6 +12,7 @@ import 'package:sakani/features/auth/presentation/providers/auth_provider.dart';
 import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/chat/presentation/providers/chat_provider.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
+import 'package:sakani/core/localization/app_localizations.dart';
 
 class ApartmentDetailScreen extends StatefulWidget {
   final Apartment apartment;
@@ -81,8 +82,8 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           AppSnackbar.show(
                             context,
                             message: _isFavorite
-                                ? 'تمت الإضافة للمفضلة'
-                                : 'تمت الإزالة من المفضلة',
+                                ? context.tr('addedToFav')
+                                : context.tr('removedFromFav'),
                             type: _isFavorite
                                 ? ToastType.success
                                 : ToastType.info,
@@ -104,7 +105,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                         onPressed: () {
                           AppSnackbar.show(
                             context,
-                            message: 'تم نسخ رابط الشقة للمشاركة',
+                            message: context.tr('linkCopied'),
                             type: ToastType.info,
                           );
                         },
@@ -229,8 +230,8 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                 const SizedBox(width: 6),
                                 Text(
                                   apt.isAvailable
-                                      ? 'متاحة للحجز الآن'
-                                      : 'محجوزة حالياً',
+                                      ? context.tr('availableForRentNow')
+                                      : context.tr('currentlyBooked'),
                                   style: TextStyle(
                                     color: apt.isAvailable
                                         ? AppColors.success
@@ -259,7 +260,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                 ),
                               ),
                               Text(
-                                ' (28 تقييم)',
+                                ' ${context.tr('reviewsCount', ['28'])}',
                                 style: TextStyle(
                                   color: context.textSecondary,
                                   fontSize: 12,
@@ -328,25 +329,25 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           children: [
                             _SpecItem(
                               icon: Icons.king_bed_outlined,
-                              label: 'الغرف',
+                              label: context.tr('bedrooms'),
                               value: '${apt.bedrooms}',
                             ),
                             _buildDivider(context),
                             _SpecItem(
                               icon: Icons.bathtub_outlined,
-                              label: 'الحمامات',
+                              label: context.tr('bathrooms'),
                               value: '${apt.bathrooms}',
                             ),
                             _buildDivider(context),
                             _SpecItem(
                               icon: Icons.straighten_outlined,
-                              label: 'المساحة',
-                              value: '${apt.area.round()} م²',
+                              label: context.tr('area'),
+                              value: '${apt.area.round()} m²',
                             ),
                             _buildDivider(context),
                             _SpecItem(
                               icon: Icons.group_outlined,
-                              label: 'الضيوف',
+                              label: context.tr('maxGuests'),
                               value: '${apt.maxGuests}',
                             ),
                           ],
@@ -356,7 +357,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
 
                       // ── Description ──
                       Text(
-                        'عن هذا السكن',
+                        context.tr('aboutThisHome'),
                         style: TextStyle(
                           color: context.textPrimary,
                           fontSize: 17,
@@ -377,7 +378,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                       // ── Amenities Section ──
                       if (apt.amenities.isNotEmpty) ...[
                         Text(
-                          'المرافق والخدمات المتاحة',
+                          context.tr('amenitiesAndFacilities'),
                           style: TextStyle(
                             color: context.textPrimary,
                             fontSize: 17,
@@ -453,7 +454,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                   Text(
                                     apt.ownerName.isNotEmpty
                                         ? apt.ownerName
-                                        : 'مالك السكن',
+                                        : context.tr('owner'),
                                     style: TextStyle(
                                       color: context.textPrimary,
                                       fontSize: 15,
@@ -470,7 +471,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        'مالك معتمد وموثق',
+                                        context.tr('verifiedHost'),
                                         style: TextStyle(
                                           color: context.accentColor,
                                           fontSize: 12,
@@ -522,9 +523,9 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'الإيجار الشهري',
-                          style: TextStyle(
+                        Text(
+                          context.tr('monthlyRentPrice'),
+                          style: const TextStyle(
                             fontSize: 11,
                             color: Colors.grey,
                             fontWeight: FontWeight.w600,
@@ -541,9 +542,9 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            const Text(
-                              ' ج.م',
-                              style: TextStyle(
+                            Text(
+                              ' ${context.tr('currency')}',
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -556,7 +557,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
 
                   // Chat with Host Icon Button
                   IconButton(
-                    tooltip: 'محادثة المالك',
+                    tooltip: context.tr('chatWithHost'),
                     onPressed: () => _openChat(context),
                     icon: Container(
                       padding: const EdgeInsets.all(12),
@@ -580,7 +581,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                   Expanded(
                     flex: 6,
                     child: GradientButton(
-                      text: 'احجز الآن',
+                      text: context.tr('bookNow'),
                       height: 48,
                       onPressed: () {
                         Navigator.pushNamed(
@@ -608,7 +609,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
     if (user == null) {
       AppSnackbar.show(
         context,
-        message: 'يرجى تسجيل الدخول أولاً للمحادثة',
+        message: context.tr('loginToChat'),
         type: ToastType.warning,
       );
       return;
