@@ -4,16 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sakani/core/config/theme.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
-import 'package:sakani/core/widgets/empty_state.dart';
 import 'package:sakani/core/widgets/shimmer_loading.dart';
 import 'package:sakani/core/widgets/notifications_bottom_sheet.dart';
 import 'package:sakani/features/apartments/data/models/apartment_model.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_state.dart';
 import 'package:sakani/features/apartments/presentation/widgets/apartment_card.dart';
-import 'package:sakani/features/apartments/presentation/widgets/featured_carousel.dart';
 import 'package:sakani/features/apartments/presentation/widgets/filter_bottom_sheet.dart';
-import 'package:sakani/features/apartments/presentation/widgets/quick_sort_bar.dart';
 import 'package:sakani/core/widgets/luxury_nav_bar.dart';
 import 'package:sakani/features/apartments/presentation/cubit/wishlist_cubit.dart';
 import 'package:sakani/features/apartments/presentation/screens/wishlist_screen.dart';
@@ -38,6 +35,7 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
   int _currentIndex = 0;
   final TextEditingController _searchCtl = TextEditingController();
   String _searchQuery = '';
+  String _selectedCategory = 'all';
 
   @override
   void initState() {
@@ -87,250 +85,123 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
       extendBody: true,
       appBar: _currentIndex == 0
           ? PreferredSize(
-              preferredSize: const Size.fromHeight(68),
+              preferredSize: const Size.fromHeight(70),
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Directionality(
-                    textDirection: context.isArabic ? TextDirection.rtl : TextDirection.ltr,
-                    child: Row(
-                      children: [
-                        // ── Profile Avatar with Photo ──
-                        GestureDetector(
-                          onTap: () => setState(() => _currentIndex = 4),
-                          child: Container(
-                            padding: const EdgeInsets.all(2.5),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [context.accentColor, AppColors.goldDark],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: context.accentColor.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: context.surfaceColor,
-                              backgroundImage: hasUserPhoto
-                                  ? (userPhoto.startsWith('http')
-                                      ? CachedNetworkImageProvider(userPhoto)
-                                      : FileImage(File(userPhoto)) as ImageProvider)
-                                  : null,
-                              child: !hasUserPhoto
-                                  ? Text(
-                                      hasUserName
-                                          ? userName[0].toUpperCase()
-                                          : (context.isArabic ? 'س' : 'S'),
-                                      style: TextStyle(
-                                        color: context.accentColor,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        // ── Greeting & Welcome ──
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      '${tr.tr('welcome')} ${hasUserName ? userName.split(' ').first : ""}'.trim(),
-                                      style: TextStyle(
-                                        color: context.textPrimary,
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Text('👋', style: TextStyle(fontSize: 14)),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                tr.tr('findApartment'),
-                                style: TextStyle(
-                                  color: context.textSecondary.withValues(alpha: 0.8),
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // ── Language Toggle Pill (AR / EN) ──
-                        GestureDetector(
-                          onTap: () => context.read<LocaleProvider>().toggleLang(),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: context.cardColor,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: context.accentColor.withValues(alpha: 0.4),
-                                width: 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                    alpha: context.isDark ? 0.2 : 0.04,
-                                  ),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.translate_rounded,
-                                  color: context.accentColor,
-                                  size: 14,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  lang == 'ar' ? 'EN' : 'عربي',
-                                  style: TextStyle(
-                                    color: context.accentColor,
-                                    fontSize: 11.5,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        // ── Notifications ──
-                        Stack(
-                          clipBehavior: Clip.none,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Row(
+                    children: [
+                      // Brand & Greeting
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: context.cardColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: context.borderColor,
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(
-                                      alpha: context.isDark ? 0.2 : 0.04,
-                                    ),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
+                            Text(
+                              hasUserName
+                                  ? '${tr.tr('welcome')} ${userName.split(' ').first}'
+                                  : tr.tr('appName'),
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.3,
                               ),
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.notifications_outlined,
-                                  color: context.accentColor,
-                                  size: 20,
-                                ),
-                                onPressed: () => NotificationsBottomSheet.show(context),
-                                tooltip: tr.tr('notifications'),
-                                constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-                                padding: EdgeInsets.zero,
-                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            Positioned(
-                              top: 4,
-                              left: 4,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: AppColors.error,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: context.surfaceColor,
-                                    width: 1.5,
-                                  ),
-                                ),
+                            const SizedBox(height: 2),
+                            Text(
+                              tr.tr('appTagline'),
+                              style: TextStyle(
+                                color: context.accentColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(width: 6),
-                        // ── Interactive Map View Button ──
-                        Container(
+                      ),
+
+                      // Language Toggle
+                      BouncingTap(
+                        onTap: () => context.read<LocaleProvider>().toggleLang(),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: context.cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: context.borderColor,
+                            ),
+                          ),
+                          child: Text(
+                            lang == 'ar' ? 'EN' : 'عربي',
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Notifications
+                      BouncingTap(
+                        onTap: () => NotificationsBottomSheet.show(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
                             color: context.cardColor,
                             shape: BoxShape.circle,
-                            border: Border.all(
-                              color: context.borderColor,
-                              width: 1,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(
-                                  alpha: context.isDark ? 0.2 : 0.04,
-                                ),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            border: Border.all(color: context.borderColor),
                           ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.map_outlined,
-                              color: context.accentColor,
-                              size: 20,
-                            ),
-                            onPressed: () => Navigator.pushNamed(context, '/apartments-map'),
-                            tooltip: tr.tr('interactiveMap'),
-                            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-                            padding: EdgeInsets.zero,
+                          child: Icon(
+                            Icons.notifications_none_rounded,
+                            color: context.textPrimary,
+                            size: 20,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        // ── AI Property Assistant Button ──
-                        Container(
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Profile Avatar
+                      GestureDetector(
+                        onTap: () => setState(() => _currentIndex = 4),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            gradient: AppGradients.gold,
                             shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.gold.withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            border: Border.all(color: context.accentColor, width: 1.5),
                           ),
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.auto_awesome,
-                              color: Color(0xFF080C14),
-                              size: 19,
-                            ),
-                            onPressed: () => Navigator.pushNamed(context, '/ai-assistant'),
-                            tooltip: tr.tr('aiAssistant'),
-                            constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-                            padding: EdgeInsets.zero,
+                          child: CircleAvatar(
+                            radius: 17,
+                            backgroundColor: context.surfaceColor,
+                            backgroundImage: hasUserPhoto
+                                ? (userPhoto.startsWith('http')
+                                    ? CachedNetworkImageProvider(userPhoto)
+                                    : FileImage(File(userPhoto)) as ImageProvider)
+                                : null,
+                            child: !hasUserPhoto
+                                ? Text(
+                                    hasUserName
+                                        ? userName[0].toUpperCase()
+                                        : (context.isArabic ? 'س' : 'S'),
+                                    style: TextStyle(
+                                      color: context.accentColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  )
+                                : null,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -352,289 +223,304 @@ class _TenantHomeScreenState extends State<TenantHomeScreen> {
   }
 
   Widget _buildExploreTab(AppLocalizations tr) {
+    final isArabic = context.isArabic;
+
     return BlocBuilder<ApartmentCubit, ApartmentState>(
       builder: (context, state) {
-        final allApartments = state.apartments;
         final filtered = state.filteredApartments.where((apt) {
-          if (_searchQuery.isEmpty) return true;
-          final q = _searchQuery.toLowerCase();
-          return apt.title.toLowerCase().contains(q) ||
-              apt.city.toLowerCase().contains(q) ||
-              apt.address.toLowerCase().contains(q);
+          if (_searchQuery.isNotEmpty) {
+            final q = _searchQuery.toLowerCase();
+            final matchText = apt.title.toLowerCase().contains(q) ||
+                apt.city.toLowerCase().contains(q) ||
+                apt.address.toLowerCase().contains(q);
+            if (!matchText) return false;
+          }
+
+          if (_selectedCategory == 'luxury') {
+            return apt.monthlyPrice >= 5000 || apt.area >= 120;
+          } else if (_selectedCategory == 'furnished') {
+            return apt.amenities.any((a) => a.contains('مطبخ') || a.contains('تكييف'));
+          } else if (_selectedCategory == 'studio') {
+            return apt.bedrooms <= 1;
+          } else if (_selectedCategory == 'daily') {
+            return apt.dailyPrice > 0;
+          }
+          return true;
         }).toList();
 
-        return Column(
-          children: [
-            // Search Input Row with Filter Button
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: context.cardColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: context.isDark
-                              ? Colors.white.withValues(alpha: 0.08)
-                              : context.borderColor,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
+        return RefreshIndicator(
+          color: context.accentColor,
+          onRefresh: () async {
+            context.read<ApartmentCubit>().loadApartments();
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
+              // ── Search & Filter Capsule ──
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: context.cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: context.borderColor),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(
+                            alpha: context.isDark ? 0.25 : 0.04,
                           ),
-                        ],
-                      ),
-                      child: TextField(
-                        controller: _searchCtl,
-                        onChanged: (val) => setState(() => _searchQuery = val.trim()),
-                        style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
                         ),
-                        decoration: InputDecoration(
-                          hintText: tr.tr('searchPlaceholder'),
-                          hintStyle: TextStyle(
-                            color: context.textSecondary.withValues(alpha: 0.65),
-                            fontSize: 13.5,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search_rounded,
-                            color: context.accentColor,
-                            size: 22,
-                          ),
-                          suffixIcon: _searchQuery.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear_rounded, size: 18),
-                                  onPressed: () {
-                                    _searchCtl.clear();
-                                    setState(() => _searchQuery = '');
-                                  },
-                                )
-                              : null,
-                          border: InputBorder.none,
-                          enabledBorder: InputBorder.none,
-                          focusedBorder: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 14),
+                        Icon(
+                          Icons.search_rounded,
+                          color: context.accentColor,
+                          size: 22,
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: _searchCtl,
+                            onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: isArabic
+                                  ? 'ابحث بالمدينة، الحي، أو اسم العقار...'
+                                  : 'Search city, neighborhood, or title...',
+                              hintStyle: TextStyle(
+                                color: context.textSecondary.withValues(alpha: 0.6),
+                                fontSize: 13,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ),
+                        if (_searchQuery.isNotEmpty)
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, size: 18),
+                            onPressed: () {
+                              _searchCtl.clear();
+                              setState(() => _searchQuery = '');
+                            },
+                          ),
+                        Container(
+                          height: 26,
+                          width: 1,
+                          color: context.borderColor,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                        // Filter Trigger
+                        BouncingTap(
+                          onTap: () => FilterBottomSheet.show(
+                            context: context,
+                            initialOptions: state.filterOptions,
+                            onApply: (opts) =>
+                                context.read<ApartmentCubit>().applyFilters(opts),
+                            onReset: () =>
+                                context.read<ApartmentCubit>().resetFilters(),
+                            matchingCount: state.filteredApartments.length,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Icon(
+                              Icons.tune_rounded,
+                              color: state.filterOptions.hasActiveFilters
+                                  ? context.accentColor
+                                  : context.textSecondary,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  // Filter Button with Badge
-                  BouncingTap(
-                    scaleFactor: 0.93,
-                    onTap: () => FilterBottomSheet.show(
-                      context: context,
-                      initialOptions: state.filterOptions,
-                      onApply: (opts) => context.read<ApartmentCubit>().applyFilters(opts),
-                      onReset: () => context.read<ApartmentCubit>().resetFilters(),
-                      matchingCount: state.filteredApartments.length,
+                ),
+              ),
+
+              // ── Clean Category Chips ──
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 38,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    children: [
+                      _buildCategoryChip('all', isArabic ? 'الكل' : 'All'),
+                      _buildCategoryChip('luxury', isArabic ? 'عقارات فاخرة' : 'Luxury'),
+                      _buildCategoryChip('furnished', isArabic ? 'مفروشة بالكامل' : 'Furnished'),
+                      _buildCategoryChip('studio', isArabic ? 'استوديوهات' : 'Studios'),
+                      _buildCategoryChip('daily', isArabic ? 'إيجار يومي' : 'Daily Rent'),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(
+                child: SizedBox(height: 16),
+              ),
+
+              // ── Loading Skeletons ──
+              if (state.isLoading)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => const ShimmerApartmentCard(),
+                      childCount: 3,
                     ),
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        gradient: state.filterOptions.hasActiveFilters
-                            ? LinearGradient(
-                                colors: [context.accentColor, AppColors.goldDark],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              )
-                            : null,
-                        color: state.filterOptions.hasActiveFilters ? null : context.cardColor,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: state.filterOptions.hasActiveFilters
-                              ? context.accentColor
-                              : (context.isDark
-                                  ? Colors.white.withValues(alpha: 0.08)
-                                  : context.borderColor),
-                          width: 1.2,
-                        ),
-                        boxShadow: state.filterOptions.hasActiveFilters
-                            ? [
-                                BoxShadow(
-                                  color: context.accentColor.withValues(alpha: 0.4),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ]
-                            : [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        clipBehavior: Clip.none,
+                  ),
+                )
+              // ── Empty State ──
+              else if (filtered.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.tune_rounded,
-                            color: state.filterOptions.hasActiveFilters
-                                ? Colors.black
-                                : context.accentColor,
-                            size: 22,
-                          ),
-                          if (state.filterOptions.hasActiveFilters)
-                            Positioned(
-                              top: -4,
-                              right: -4,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: AppColors.error,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                                child: Center(
-                                  child: Text(
-                                    '${state.filterOptions.activeFiltersCount}',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w900,
-                                      height: 1,
-                                    ),
-                                  ),
-                                ),
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: context.accentColor.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: context.accentColor.withValues(alpha: 0.25),
                               ),
                             ),
+                            child: Icon(
+                              Icons.apartment_rounded,
+                              size: 40,
+                              color: context.accentColor,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            isArabic ? 'لا توجد عقارات حالياً' : 'No properties found',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: context.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isArabic
+                                ? 'المنصة جاهزة لاستقبال العقارات المعتمدة الجديدة'
+                                : 'The platform is ready for newly listed residences.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: context.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          BouncingTap(
+                            onTap: () => context.read<ApartmentCubit>().loadApartments(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: context.cardColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: context.borderColor),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.refresh_rounded, size: 16, color: context.accentColor),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    isArabic ? 'تحديث' : 'Refresh',
+                                    style: TextStyle(
+                                      color: context.textPrimary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 4),
-
-            // Quick Sorting Pills
-            QuickSortBar(
-              selectedSort: state.filterOptions.sortBy,
-              onSortChanged: (sort) => context.read<ApartmentCubit>().setSortBy(sort),
-            ),
-            const SizedBox(height: 8),
-
-            // Apartment List or Skeletons
-            Expanded(
-              child: state.isLoading
-                  ? ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: 4,
-                      itemBuilder: (_, _) => const ShimmerApartmentCard(),
-                    )
-                  : RefreshIndicator(
-                      color: context.accentColor,
-                      onRefresh: () async {
-                        context.read<ApartmentCubit>().loadApartments(
-                              city: state.selectedCity,
-                              maxPrice: state.maxPrice,
-                            );
-                      },
-                      child: filtered.isEmpty
-                          ? ListView(
-                              children: [
-                                const SizedBox(height: 60),
-                                EmptyState(
-                                  icon: Icons.holiday_village_outlined,
-                                  title: tr.tr('noApartments'),
-                                  subtitle: _searchQuery.isNotEmpty
-                                      ? tr.tr('noResults')
-                                      : tr.tr('noApartments'),
-                                ),
-                              ],
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 96),
-                              itemCount: filtered.length + (_searchQuery.isEmpty && allApartments.length > 1 ? 2 : 0),
-                              itemBuilder: (context, index) {
-                                final showFeatured = _searchQuery.isEmpty && allApartments.length > 1;
-
-                                if (showFeatured && index == 0) {
-                                  final featuredList = allApartments.map((e) => e is ApartmentModel ? e : ApartmentModel.fromEntity(e)).toList();
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: FeaturedCarousel(apartments: featuredList),
-                                  );
-                                }
-
-                                if (showFeatured && index == 1) {
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 4,
-                                              height: 18,
-                                              decoration: BoxDecoration(
-                                                color: context.accentColor,
-                                                borderRadius: BorderRadius.circular(4),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'جميع الشقق المتاحة',
-                                              style: TextStyle(
-                                                fontSize: 17,
-                                                fontWeight: FontWeight.w800,
-                                                color: context.textPrimary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                          decoration: BoxDecoration(
-                                            color: context.accentColor.withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(10),
-                                          ),
-                                          child: Text(
-                                            '${filtered.length} شقة',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w700,
-                                              color: context.accentColor,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-
-                                final actualIndex = showFeatured ? index - 2 : index;
-                                final aptEntity = filtered[actualIndex];
-                                final aptModel = aptEntity is ApartmentModel
-                                    ? aptEntity
-                                    : ApartmentModel.fromEntity(aptEntity);
-                                return ApartmentCard(
-                                  apartment: aptModel,
-                                  onTap: () => Navigator.pushNamed(
-                                    context,
-                                    '/apartment-detail',
-                                    arguments: aptModel,
-                                  ),
-                                );
-                              },
+                )
+              // ── Clean List of Apartment Cards ──
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final aptEntity = filtered[index];
+                        final aptModel = aptEntity is ApartmentModel
+                            ? aptEntity
+                            : ApartmentModel.fromEntity(aptEntity);
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: ApartmentCard(
+                            apartment: aptModel,
+                            onTap: () => Navigator.pushNamed(
+                              context,
+                              '/apartment-detail',
+                              arguments: aptModel,
                             ),
+                          ),
+                        );
+                      },
+                      childCount: filtered.length,
                     ),
-            ),
-          ],
+                  ),
+                ),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildCategoryChip(String key, String label) {
+    final isSelected = _selectedCategory == key;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCategory = key),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(left: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? context.accentColor : context.cardColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? context.accentColor : context.borderColor,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.5,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? Colors.black : context.textSecondary,
+          ),
+        ),
+      ),
     );
   }
 

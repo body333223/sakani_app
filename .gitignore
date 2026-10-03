@@ -63,3 +63,5 @@ key.properties
 web_admin_build/
 *.sqlite
 *.enc
+devtools_options.yaml
+android/build/
