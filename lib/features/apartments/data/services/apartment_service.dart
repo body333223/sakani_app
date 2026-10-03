@@ -2,22 +2,61 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/config/api_config.dart';
 import '../models/apartment_model.dart';
 
 /// خدمة إدارة وتصفح الشقق والعقارات (Clean Code Architecture)
 class ApartmentService {
-  // التخزين المؤقت يبدأ نظيفاً بدون أي بيانات وهمية
+  static const String _storageKey = '__sakani_persistent_apts_v2__';
   static final List<Apartment> _cachedApartments = [];
   static final StreamController<List<Apartment>> _aptsStreamController =
       StreamController<List<Apartment>>.broadcast();
+  static bool _hasLoadedFromDisk = false;
+
+  ApartmentService() {
+    _ensureLoadedFromDisk();
+  }
+
+  static Future<void> _ensureLoadedFromDisk() async {
+    if (_hasLoadedFromDisk) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_storageKey);
+      if (raw != null && raw.isNotEmpty) {
+        final List decoded = jsonDecode(raw);
+        _cachedApartments.clear();
+        for (var item in decoded) {
+          try {
+            _cachedApartments.add(Apartment.fromMap(item, item['id'] ?? ''));
+          } catch (_) {}
+        }
+        _hasLoadedFromDisk = true;
+        _aptsStreamController.add(List.unmodifiable(_cachedApartments));
+      } else {
+        _hasLoadedFromDisk = true;
+      }
+    } catch (_) {
+      _hasLoadedFromDisk = true;
+    }
+  }
+
+  static Future<void> _saveApartmentsToDisk() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = _cachedApartments.map((a) => a.toMap()).toList();
+      await prefs.setString(_storageKey, jsonEncode(list));
+    } catch (_) {}
+  }
 
   void _updateStreams() {
     _aptsStreamController.add(List.unmodifiable(_cachedApartments));
+    _saveApartmentsToDisk();
   }
 
-  /// جلب الشقق المتاحة مع إمكانية الفلترة
+  /// جلب الشقق المتاحة مع إمكانية الفلترة السريعة اللحظية
   Stream<List<Apartment>> getApartments({String? city, double? maxPrice}) {
+    _ensureLoadedFromDisk();
     _fetchApartmentsFromApi(city: city, maxPrice: maxPrice);
 
     return Stream<List<Apartment>>.multi((controller) {

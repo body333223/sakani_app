@@ -14,8 +14,6 @@ import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
 import 'package:sakani/features/auth/data/services/auth_service.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 import 'package:sakani/features/settings/presentation/providers/theme_provider.dart';
-import 'package:sakani/features/wallet/data/services/wallet_service.dart';
-import 'package:sakani/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:sakani/core/services/biometric_service.dart';
 import 'package:sakani/features/support/presentation/screens/support_chat_screen.dart';
 
@@ -290,15 +288,14 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildQuickHub(BuildContext context) {
-    final wallet = WalletService();
     return Row(
       children: [
-        // Wallet Card
+        // 24/7 Customer Support Card
         Expanded(
           child: GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const WalletScreen()),
+              MaterialPageRoute(builder: (_) => const SupportChatScreen()),
             ),
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -336,7 +333,7 @@ class SettingsScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.account_balance_wallet_rounded,
+                          Icons.headset_mic_rounded,
                           color: context.accentColor,
                           size: 18,
                         ),
@@ -349,9 +346,9 @@ class SettingsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    context.tr('walletBalance'),
-                    style: const TextStyle(
+                  const Text(
+                    'مركز الدعم والمساعدة',
+                    style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey,
                       fontWeight: FontWeight.w600,
@@ -360,21 +357,21 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text(
-                        '${wallet.balance.round()}',
-                        style: TextStyle(
-                          color: context.accentColor,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.success,
+                          shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Text(
-                        context.tr('currency'),
+                        'متاح 24/7 فورياً',
                         style: TextStyle(
-                          color: context.textPrimary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                          color: context.accentColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],

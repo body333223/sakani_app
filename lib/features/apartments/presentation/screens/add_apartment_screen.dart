@@ -11,6 +11,9 @@ import 'package:sakani/core/widgets/gradient_button.dart';
 import 'package:sakani/core/widgets/section_header.dart';
 import 'package:sakani/core/widgets/app_snackbar.dart';
 import 'package:sakani/features/apartments/presentation/cubit/apartment_cubit.dart';
+import 'package:sakani/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:sakani/features/auth/data/services/auth_service.dart';
+import 'package:sakani/core/security/security_sanitizer.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 
 class AddApartmentScreen extends StatefulWidget {
@@ -79,34 +82,54 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
       );
       return;
     }
-    final user = context.read<AuthProvider>().user;
-    if (user == null) return;
+    final authCubit = context.read<AuthCubit>();
+    final authProv = context.read<AuthProvider>();
+    final direct = AuthService.currentUser;
+    final user = authCubit.currentUser ?? authProv.user ?? direct;
+
+    if (user == null || (!user.isOwner && user.role != 'owner')) {
+      AppSnackbar.show(
+        context,
+        message: 'عذراً، إضافة العقارات مقتصرة على أصحاب العقارات والتجار فقط.',
+        type: ToastType.error,
+      );
+      return;
+    }
+
+    final daily = double.tryParse(_dailyPriceCtl.text) ?? 0;
+    final monthly = double.tryParse(_monthlyPriceCtl.text) ?? 0;
+    final yearly = double.tryParse(_yearlyPriceCtl.text) ?? 0;
+    final deposit = double.tryParse(_depositCtl.text) ?? 0;
+
+    if (daily < 0 || monthly < 0 || yearly < 0 || deposit < 0) {
+      AppSnackbar.show(
+        context,
+        message: 'القيم المالية لا يمكن أن تكون سالبة',
+        type: ToastType.error,
+      );
+      return;
+    }
+
     final aptProv = context.read<ApartmentProvider>();
     final apartment = Apartment(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       ownerId: user.uid,
-      ownerName: user.name,
-      title: _titleCtl.text.trim(),
-      description: _descCtl.text.trim(),
-      city: _cityCtl.text.trim(),
-      address: _addressCtl.text.trim(),
+      ownerName: SecuritySanitizer.sanitizeSql(user.name.isNotEmpty ? user.name : 'مالك عقار'),
+      title: SecuritySanitizer.sanitizeSql(_titleCtl.text.trim()),
+      description: SecuritySanitizer.sanitizeSql(_descCtl.text.trim()),
+      city: SecuritySanitizer.sanitizeSql(_cityCtl.text.trim()),
+      address: SecuritySanitizer.sanitizeSql(_addressCtl.text.trim()),
       bedrooms: _bedrooms,
       bathrooms: _bathrooms,
       area: _area,
       amenities: _selectedAmenities,
       images: _images.map((e) => e.path).toList(),
       availableRentTypes: _availableRentTypes,
-      dailyPrice: _availableRentTypes.contains('يومي')
-          ? (double.tryParse(_dailyPriceCtl.text) ?? 0)
-          : 0,
-      monthlyPrice: _availableRentTypes.contains('شهري')
-          ? (double.tryParse(_monthlyPriceCtl.text) ?? 0)
-          : 0,
-      yearlyPrice: _availableRentTypes.contains('سنوي')
-          ? (double.tryParse(_yearlyPriceCtl.text) ?? 0)
-          : 0,
-      securityDeposit: double.tryParse(_depositCtl.text) ?? 0,
-      contactPhone: _phoneCtl.text.trim(),
+      dailyPrice: _availableRentTypes.contains('يومي') ? daily : 0,
+      monthlyPrice: _availableRentTypes.contains('شهري') ? monthly : 0,
+      yearlyPrice: _availableRentTypes.contains('سنوي') ? yearly : 0,
+      securityDeposit: deposit,
+      contactPhone: SecuritySanitizer.sanitizeSql(_phoneCtl.text.trim()),
       maxGuests: _maxGuests,
     );
     await aptProv.addApartment(apartment);
@@ -125,6 +148,40 @@ class _AddApartmentScreenState extends State<AddApartmentScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authCubit = context.watch<AuthCubit>();
+    final authProv = context.watch<AuthProvider>();
+    final direct = AuthService.currentUser;
+    final user = authCubit.currentUser ?? authProv.user ?? direct;
+    final isOwner = user != null && (user.isOwner || user.role == 'owner');
+
+    if (!isOwner) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('صلاحية غير مصرح بها')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.security_rounded, size: 64, color: AppColors.error),
+                const SizedBox(height: 16),
+                const Text(
+                  'خاصية إضافة العقارات مقتصرة على أصحاب العقارات والتجار فقط.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('العودة للرئيسية'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text(context.tr('addNewApartment'))),
       body: SingleChildScrollView(

@@ -10,7 +10,6 @@ class OwnerStatsOverview extends StatelessWidget {
   final int activeBookings;
   final double estimatedRevenue;
   final double pendingRevenue;
-  final VoidCallback? onOpenWallet;
 
   const OwnerStatsOverview({
     super.key,
@@ -19,7 +18,6 @@ class OwnerStatsOverview extends StatelessWidget {
     required this.activeBookings,
     required this.estimatedRevenue,
     this.pendingRevenue = 0.0,
-    this.onOpenWallet,
   });
 
   @override
@@ -72,7 +70,7 @@ class OwnerStatsOverview extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
-                            Icons.account_balance_wallet_rounded,
+                            Icons.trending_up_rounded,
                             color: context.accentColor,
                             size: 20,
                           ),
@@ -117,24 +115,31 @@ class OwnerStatsOverview extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (onOpenWallet != null)
-                      ElevatedButton.icon(
-                        onPressed: onOpenWallet,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.accentColor,
-                          foregroundColor: const Color(0xFF0F172A),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                        ),
-                        icon: const Icon(Icons.arrow_outward_rounded, size: 16),
-                        label: Text(
-                          context.tr('myWallet'),
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: context.accentColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: context.accentColor.withValues(alpha: 0.3),
                         ),
                       ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_rounded, color: context.accentColor, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.tr('realizedEarnings'),
+                            style: TextStyle(
+                              color: context.accentColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 if (pendingRevenue > 0) ...[

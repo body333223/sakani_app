@@ -158,6 +158,12 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
 
+    // Security Guard: Anti-tampering check
+    if (_totalAmount <= 0 || _daysCount <= 0 || _commission < 0 || _fairDeposit < 0) {
+      AppSnackbar.show(context, message: 'بيانات الحجز أو التكلفة غير صالحة', type: ToastType.error);
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     final booking = Booking(
@@ -542,9 +548,9 @@ class _BookingScreenState extends State<BookingScreen> {
             ),
             const SizedBox(height: 8),
             _PaymentCard(
-              title: 'إنستاباي / محفظة ذكية',
-              subtitle: 'تحويل سريع عبر InstaPay أو فودافون كاش',
-              icon: Icons.account_balance_wallet_outlined,
+              title: 'إنستاباي / تحويل بنكي سريع',
+              subtitle: 'تحويل فوري وآمن عبر InstaPay أو تطبيقك البنكي',
+              icon: Icons.bolt_rounded,
               isSelected: _paymentMethod == 'instapay',
               onTap: () => setState(() => _paymentMethod = 'instapay'),
             ),

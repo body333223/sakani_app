@@ -16,7 +16,6 @@ import 'package:sakani/features/bookings/presentation/providers/booking_provider
 import 'package:sakani/features/bookings/presentation/widgets/owner_booking_card.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/settings/presentation/screens/settings_screen.dart';
-import 'package:sakani/features/wallet/data/services/wallet_service.dart';
 import 'package:sakani/core/localization/app_localizations.dart';
 import 'package:sakani/features/settings/presentation/providers/locale_provider.dart';
 
@@ -56,13 +55,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
         isAvailable: false,
       );
 
-      // 3. Credit owner earnings directly to Digital Wallet!
+      // 3. Net earnings calculated
       final netEarnings = (b.totalAmount - b.commissionAmount).clamp(0.0, double.infinity);
-      await WalletService().recordBookingEarnings(
-        amount: netEarnings,
-        apartmentTitle: b.apartmentTitle,
-        tenantName: b.tenantName,
-      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -175,11 +169,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             onPressed: () => context.read<LocaleProvider>().toggleLang(),
             tooltip: tr.tr('changeLanguage'),
           ),
-          IconButton(
-            icon: Icon(Icons.account_balance_wallet_rounded, color: context.accentColor),
-            onPressed: () => Navigator.pushNamed(context, '/wallet'),
-            tooltip: tr.tr('wallet'),
-          ),
           if (_currentIndex == 0 || _currentIndex == 1)
             IconButton(
               icon: Icon(Icons.add_circle_outline_rounded, color: context.accentColor),
@@ -237,7 +226,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                     activeBookings: activeBookings,
                     estimatedRevenue: totalRevenue,
                     pendingRevenue: pendingRevenue,
-                    onOpenWallet: () => Navigator.pushNamed(context, '/wallet'),
                   ),
                   const SizedBox(height: 20),
 

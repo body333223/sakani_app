@@ -22,7 +22,6 @@ import 'package:sakani/features/apartments/presentation/screens/add_apartment_sc
 import 'package:sakani/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:sakani/features/chat/presentation/screens/chat_screen.dart';
 import 'package:sakani/features/auth/presentation/screens/kyc_screen.dart';
-import 'package:sakani/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:sakani/core/utils/page_transitions.dart';
 import 'package:sakani/features/settings/presentation/screens/user_profile_screen.dart';
 import 'package:sakani/features/apartments/presentation/screens/apartments_map_screen.dart';
@@ -126,8 +125,6 @@ class SakaniApp extends StatelessWidget {
                 case '/chat':
                   final room = settings.arguments as ChatRoom;
                   return LuxuryPageRoute(page: ChatScreen(room: room));
-                case '/wallet':
-                  return LuxuryPageRoute(page: const WalletScreen());
                 case '/kyc':
                   return LuxuryPageRoute(page: const KycScreen());
                 case '/user-profile':

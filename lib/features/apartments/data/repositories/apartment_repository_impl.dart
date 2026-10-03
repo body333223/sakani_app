@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sakani/core/error/exceptions.dart';
 import 'package:sakani/core/error/failures.dart';
 import 'package:sakani/core/utils/result.dart';
@@ -13,15 +15,52 @@ class ApartmentRepositoryImpl implements ApartmentRepository {
   final List<ApartmentModel> _cache = [];
   final StreamController<List<ApartmentEntity>> _streamController =
       StreamController<List<ApartmentEntity>>.broadcast();
+  static const String _storageKey = '__sakani_repo_persistent_apts_v2__';
+  static bool _hasLoadedFromDisk = false;
 
-  ApartmentRepositoryImpl({required this.remoteDataSource});
+  ApartmentRepositoryImpl({required this.remoteDataSource}) {
+    _ensureLoadedFromDisk();
+  }
+
+  Future<void> _ensureLoadedFromDisk() async {
+    if (_hasLoadedFromDisk) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_storageKey);
+      if (raw != null && raw.isNotEmpty) {
+        final List decoded = jsonDecode(raw);
+        _cache.clear();
+        for (var item in decoded) {
+          try {
+            _cache.add(ApartmentModel.fromMap(item, item['id'] ?? ''));
+          } catch (_) {}
+        }
+        _hasLoadedFromDisk = true;
+        _notify();
+      } else {
+        _hasLoadedFromDisk = true;
+      }
+    } catch (_) {
+      _hasLoadedFromDisk = true;
+    }
+  }
+
+  Future<void> _saveToDisk() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final list = _cache.map((a) => a.toMap()).toList();
+      await prefs.setString(_storageKey, jsonEncode(list));
+    } catch (_) {}
+  }
 
   void _notify() {
     _streamController.add(List.unmodifiable(_cache));
+    _saveToDisk();
   }
 
   @override
   Stream<List<ApartmentEntity>> getApartments({String? city, double? maxPrice}) {
+    _ensureLoadedFromDisk();
     _fetchRemote(city: city, maxPrice: maxPrice);
 
     return Stream<List<ApartmentEntity>>.multi((controller) {
