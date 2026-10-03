@@ -17,6 +17,7 @@ import 'package:sakani/features/bnpl/presentation/widgets/bnpl_calculator_modal.
 import 'package:sakani/core/security/booking_security_guard.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sakani/features/reviews/presentation/widgets/trust_badge_widget.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ApartmentDetailScreen extends StatefulWidget {
   final Apartment apartment;
@@ -30,6 +31,23 @@ class ApartmentDetailScreen extends StatefulWidget {
 class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
   int _currentImageIndex = 0;
   bool _isFavorite = false;
+  void _shareApartment(Apartment apt) {
+    final shareLink = 'https://sakani.app/p/${apt.id}';
+    final shareText = '''
+🏠 عقار مميز للإيجار عبر تطبيق سكني:
+📍 ${apt.title} - ${apt.city}, ${apt.address}
+💰 السعر: ${apt.pricePerMonth.toStringAsFixed(0)} ج.م / شهرياً
+🛏️ ${apt.bedrooms} غرف نوم • 🚿 ${apt.bathrooms} حمام • 📐 ${apt.area.toStringAsFixed(0)} م²
+
+🔗 اضغط لمشاهدة كافة التفاصيل والحجز المباشر:
+$shareLink
+''';
+
+    Share.share(
+      shareText,
+      subject: 'عقار للإيجار: ${apt.title} - تطبيق سكني',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,13 +124,7 @@ class _ApartmentDetailScreenState extends State<ApartmentDetailScreen> {
                           color: Colors.white,
                           size: 20,
                         ),
-                        onPressed: () {
-                          AppSnackbar.show(
-                            context,
-                            message: context.tr('linkCopied'),
-                            type: ToastType.info,
-                          );
-                        },
+                        onPressed: () => _shareApartment(apt),
                       ),
                     ),
                   ),

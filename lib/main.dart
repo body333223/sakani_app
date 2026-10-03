@@ -34,6 +34,7 @@ import 'package:sakani/features/contracts/presentation/screens/digital_contract_
 import 'package:sakani/features/ai_assistant/presentation/screens/ai_copilot_screen.dart';
 import 'package:sakani/features/concierge/presentation/screens/concierge_screen.dart';
 import 'package:sakani/features/support/presentation/screens/support_chat_screen.dart';
+import 'package:sakani/features/auth/presentation/screens/owner_pending_approval_screen.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sakani/core/di/injection_container.dart';
@@ -140,6 +141,8 @@ class SakaniApp extends StatelessWidget {
                   return LuxuryPageRoute(page: const SettingsScreen());
                 case '/support':
                   return LuxuryPageRoute(page: const SupportChatScreen());
+                case '/owner-pending':
+                  return LuxuryPageRoute(page: const OwnerPendingApprovalScreen());
                 case '/apartments-map':
                   return LuxuryPageRoute(page: const ApartmentsMapScreen());
                 case '/ai-assistant':
@@ -193,6 +196,9 @@ class HomeRouter extends StatelessWidget {
 
         if (state is Authenticated) {
           if (state.user.isOwner) {
+            if (state.user.isOwnerPendingApproval) {
+              return const OwnerPendingApprovalScreen();
+            }
             return const OwnerDashboardScreen();
           }
           return const TenantHomeScreen();

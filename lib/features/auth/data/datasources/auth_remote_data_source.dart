@@ -18,6 +18,11 @@ abstract class AuthRemoteDataSource {
     required String phone,
     required String role,
     String? photoUrl,
+    String? nationalId,
+    String? idFrontPath,
+    String? idBackPath,
+    String? inviteCode,
+    bool? isApproved,
   });
 
   Future<UserModel?> getUserData(String uid);
@@ -108,7 +113,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String phone,
     required String role,
     String? photoUrl,
+    String? nationalId,
+    String? idFrontPath,
+    String? idBackPath,
+    String? inviteCode,
+    bool? isApproved,
   }) async {
+    final effectiveIsApproved = isApproved ?? (role == 'tenant' || (inviteCode != null && inviteCode.trim().isNotEmpty));
     try {
       final response = await client
           .post(
@@ -121,6 +132,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
               'phone': phone.trim(),
               'role': role,
               'photoUrl': photoUrl,
+              'nationalId': nationalId,
+              'idFrontPath': idFrontPath,
+              'idBackPath': idBackPath,
+              'inviteCode': inviteCode,
+              'isApproved': effectiveIsApproved,
             }),
           )
           .timeout(ApiConfig.requestTimeout);
@@ -139,6 +155,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           createdAt: data['createdAt'] != null
               ? DateTime.tryParse(data['createdAt']) ?? DateTime.now()
               : DateTime.now(),
+          nationalId: data['nationalId'] ?? nationalId,
+          idFrontPath: data['idFrontPath'] ?? idFrontPath,
+          idBackPath: data['idBackPath'] ?? idBackPath,
+          inviteCode: data['inviteCode'] ?? inviteCode,
+          isApproved: data['isApproved'] is bool ? data['isApproved'] : effectiveIsApproved,
+          isIdVerified: true,
+          status: (data['isApproved'] == true || effectiveIsApproved) ? 'active' : 'pending_approval',
         );
       } else {
         Map<String, dynamic>? errorData;

@@ -17,6 +17,11 @@ abstract class AuthRepository {
     required String phone,
     required String role,
     String? photoUrl,
+    String? nationalId,
+    String? idFrontPath,
+    String? idBackPath,
+    String? inviteCode,
+    bool? isApproved,
   });
 
   Future<Result<UserEntity?>> getUserData(String uid);

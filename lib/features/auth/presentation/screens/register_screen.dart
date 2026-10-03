@@ -24,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   final _phoneCtl = TextEditingController();
   final _passwordCtl = TextEditingController();
   final _nationalIdCtl = TextEditingController();
+  final _inviteCodeCtl = TextEditingController();
   bool _obscurePassword = true;
   String _selectedRole = 'tenant';
   XFile? _selectedAvatar;
@@ -32,6 +33,15 @@ class _RegisterScreenState extends State<RegisterScreen>
   String? _idFrontPath;
   String? _idBackPath;
 
+  static const _validInviteCodes = [
+    'SAKANI-OWNER-2026',
+    'SAKANI-VIP-ADMIN',
+    'SAKANI-ROYAL',
+    'ADMIN-PASS-2026',
+    'SAKANI-DEV-77',
+    'OWNER-VERIFIED',
+  ];
+
   final ImagePicker _picker = ImagePicker();
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
@@ -39,7 +49,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   void initState() {
     super.initState();
-    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _animCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
   }
@@ -51,6 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     _phoneCtl.dispose();
     _passwordCtl.dispose();
     _nationalIdCtl.dispose();
+    _inviteCodeCtl.dispose();
     _animCtrl.dispose();
     super.dispose();
   }
@@ -72,7 +83,6 @@ class _RegisterScreenState extends State<RegisterScreen>
         } else {
           _idBackPath = img.path;
         }
-        // Auto-mark: both sides captured - ID is verified
       });
     }
   }
@@ -84,18 +94,25 @@ class _RegisterScreenState extends State<RegisterScreen>
       setState(() => _currentStep = 1);
       _animCtrl.forward();
     } else if (_currentStep == 1) {
-      if (_nationalIdCtl.text.length < 14) {
-        AppSnackbar.show(context, message: 'يرجى إدخال رقم قومي صحيح (14 رقم)', type: ToastType.error);
+      final nid = _nationalIdCtl.text.trim();
+      if (nid.length != 14 || !RegExp(r'^[23]\d{13}$').hasMatch(nid)) {
+        AppSnackbar.show(
+          context,
+          message: 'يرجى إدخال رقم قومي مصري صحيح مكون من 14 رقم يبدأ بـ 2 أو 3',
+          type: ToastType.error,
+        );
         return;
       }
       if (_idFrontPath == null || _idBackPath == null) {
-        AppSnackbar.show(context, message: 'يرجى رفع صورة وجه وظهر البطاقة', type: ToastType.error);
+        AppSnackbar.show(
+          context,
+          message: 'توثيق الهوية إلزامي: يرجى تصوير وجه وظهر بطاقة الرقم القومي',
+          type: ToastType.error,
+        );
         return;
       }
       _animCtrl.reset();
-      setState(() {
-        _currentStep = 2;
-      });
+      setState(() => _currentStep = 2);
       _animCtrl.forward();
     }
   }
@@ -113,6 +130,12 @@ class _RegisterScreenState extends State<RegisterScreen>
       AppSnackbar.show(context, message: 'يجب الموافقة على الشروط والأحكام أولاً', type: ToastType.error);
       return;
     }
+
+    final code = _inviteCodeCtl.text.trim().toUpperCase();
+    final isOwner = _selectedRole == 'owner';
+    final hasValidInvite = code.isNotEmpty && _validInviteCodes.contains(code);
+    final isApproved = !isOwner || hasValidInvite;
+
     context.read<AuthCubit>().register(
           email: _emailCtl.text.trim(),
           password: _passwordCtl.text,
@@ -120,6 +143,11 @@ class _RegisterScreenState extends State<RegisterScreen>
           phone: _phoneCtl.text.trim(),
           role: _selectedRole,
           photoUrl: _selectedAvatar?.path,
+          nationalId: _nationalIdCtl.text.trim(),
+          idFrontPath: _idFrontPath,
+          idBackPath: _idBackPath,
+          inviteCode: code.isNotEmpty ? code : null,
+          isApproved: isApproved,
         );
   }
 
@@ -152,17 +180,46 @@ class _RegisterScreenState extends State<RegisterScreen>
           ),
         ),
         centerTitle: true,
+        actions: [
+          TextButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SupportChatScreen()),
+              );
+            },
+            icon: const Icon(Icons.support_agent_rounded, size: 18),
+            label: Text(
+              'الدعم',
+              style: GoogleFonts.tajawal(fontWeight: FontWeight.w800, fontSize: 13),
+            ),
+            style: TextButton.styleFrom(foregroundColor: context.accentColor),
+          ),
+        ],
       ),
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
-            // If owner, show pending approval notice
-            if (_selectedRole == 'owner') {
-              _showOwnerPendingDialog(context);
+            if (state.user.isOwner) {
+              if (state.user.isOwnerPendingApproval) {
+                AppSnackbar.show(
+                  context,
+                  message: 'تم إرسال طلب حساب المالك لمراجعة الإدارة بنجاح',
+                  type: ToastType.info,
+                );
+                Navigator.pushNamedAndRemoveUntil(context, '/owner-pending', (route) => false);
+              } else {
+                AppSnackbar.show(
+                  context,
+                  message: 'مرحباً بك يا شريكنا! تم تفعيل حساب المالك بنجاح 🎉',
+                  type: ToastType.success,
+                );
+                Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+              }
             } else {
               AppSnackbar.show(
                 context,
-                message: 'مرحباً بك في سكني! تم إنشاء حسابك بنجاح 🎉',
+                message: 'مرحباً بك في سكني! تم توثيق هويتك وإنشاء حسابك بنجاح 🎉',
                 type: ToastType.success,
               );
               Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
@@ -197,9 +254,9 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   Widget _buildProgressBar(bool isDark) {
-    final steps = ['بياناتك', 'هويتك', 'التأكيد'];
+    final steps = ['بياناتك', 'الهوية KYC', 'التأكيد'];
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
       child: Row(
         children: List.generate(steps.length, (i) {
           final isActive = i == _currentStep;
@@ -210,8 +267,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                 // Circle
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
-                  width: 30,
-                  height: 30,
+                  width: 32,
+                  height: 32,
                   decoration: BoxDecoration(
                     color: isDone
                         ? AppColors.success
@@ -227,15 +284,24 @@ class _RegisterScreenState extends State<RegisterScreen>
                   ),
                   child: Center(
                     child: isDone
-                        ? const Icon(Icons.check_rounded, color: Colors.white, size: 15)
+                        ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
                         : Text(
                             '${i + 1}',
                             style: GoogleFonts.tajawal(
                               color: isActive ? Colors.black : context.textSecondary,
                               fontWeight: FontWeight.w900,
-                              fontSize: 12,
+                              fontSize: 12.5,
                             ),
                           ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  steps[i],
+                  style: GoogleFonts.tajawal(
+                    fontSize: 11,
+                    fontWeight: isActive || isDone ? FontWeight.w800 : FontWeight.w600,
+                    color: isActive ? context.accentColor : (isDone ? AppColors.success : context.textSecondary),
                   ),
                 ),
                 if (i < steps.length - 1)
@@ -243,7 +309,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       height: 2,
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
                         color: isDone
                             ? AppColors.success
@@ -275,17 +341,17 @@ class _RegisterScreenState extends State<RegisterScreen>
     }
   }
 
-  /// Step 1: Basic Info
+  /// Step 1: Basic Info & Role
   Widget _buildStep1(bool isDark, bool isLoading) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'أولاً، بياناتك الأساسية',
+          'أولاً، بيانات الحساب الأساسية',
           style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.w900, color: context.textPrimary),
         ),
         Text(
-          'أدخل بياناتك الأساسية لإنشاء الحساب',
+          'اختر نوع الحساب وأدخل بياناتك لإنشاء الحساب',
           style: GoogleFonts.tajawal(fontSize: 13, color: context.textSecondary),
         ),
         const SizedBox(height: 20),
@@ -297,8 +363,8 @@ class _RegisterScreenState extends State<RegisterScreen>
             child: Stack(
               children: [
                 Container(
-                  width: 90,
-                  height: 90,
+                  width: 86,
+                  height: 86,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isDark ? AppColors.darkCard : Colors.white,
@@ -335,58 +401,81 @@ class _RegisterScreenState extends State<RegisterScreen>
         Center(
           child: Text('صورة شخصية (اختياري)', style: GoogleFonts.tajawal(fontSize: 11.5, color: context.textSecondary)),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
-        // Role
+        // Role Selector
         Row(
           children: [
-            Expanded(child: _roleCard('tenant', 'مستأجر', Icons.key_rounded, isDark)),
+            Expanded(child: _roleCard('tenant', 'مستأجر عقار', Icons.key_rounded, isDark)),
             const SizedBox(width: 12),
-            Expanded(child: _roleCard('owner', 'مالك عقار', Icons.home_work_rounded, isDark)),
+            Expanded(child: _roleCard('owner', 'مالك عقار / تاجر', Icons.home_work_rounded, isDark)),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
 
-        // If owner, show approval notice
+        // Owner Notice & Invite Code option
         if (_selectedRole == 'owner')
           Container(
             margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
+              gradient: LinearGradient(
+                colors: isDark
+                    ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                    : [Colors.white, const Color(0xFFFEF3C7).withValues(alpha: 0.4)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline_rounded, color: AppColors.info, size: 18),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'يتطلب موافقة الإدارة',
-                        style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.info),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      Text(
-                        'حساب المالك يحتاج مراجعة وموافقة من فريق سكني قبل التفعيل',
-                        style: GoogleFonts.tajawal(fontSize: 11.5, color: context.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportChatScreen())),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
+                      child: const Icon(Icons.shield_outlined, color: Color(0xFFD97706), size: 18),
                     ),
-                    child: Text(
-                      'تواصل',
-                      style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.info),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'سياسة اعتماد حساب المالك',
+                        style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFFD97706)),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'لحماية المستأجرين وضمان حقوق الملاك، لا يتم تفعيل حساب المالك تلقائياً إلا بعد موافقة الإدارة أو إدخال كود دعوة معتمد.',
+                  style: GoogleFonts.tajawal(fontSize: 12, color: context.textSecondary, height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'كود دعوة الإدارة (اختياري للتفعيل الفوري):',
+                  style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w700, color: context.textPrimary),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+                  ),
+                  child: TextField(
+                    controller: _inviteCodeCtl,
+                    textCapitalization: TextCapitalization.characters,
+                    style: GoogleFonts.tajawal(fontWeight: FontWeight.w800, letterSpacing: 1.5, color: context.textPrimary),
+                    decoration: InputDecoration(
+                      hintText: 'مثال: SAKANI-OWNER-2026',
+                      hintStyle: GoogleFonts.tajawal(color: context.textSecondary.withValues(alpha: 0.4), letterSpacing: 0, fontSize: 12),
+                      prefixIcon: const Icon(Icons.vpn_key_rounded, size: 18, color: Color(0xFFD97706)),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     ),
                   ),
                 ),
@@ -399,8 +488,8 @@ class _RegisterScreenState extends State<RegisterScreen>
           key: _formKey,
           child: _buildFormCard(isDark),
         ),
-        const SizedBox(height: 16),
-        _buildNextButton('التالي: تحقق الهوية', Icons.arrow_forward_rounded, () => _nextStep()),
+        const SizedBox(height: 18),
+        _buildNextButton('التالي: توثيق الهوية (إلزامي)', Icons.arrow_forward_rounded, _nextStep),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -416,22 +505,42 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
-  /// Step 2: Identity Verification
+  /// Step 2: Mandatory Identity Verification (KYC)
   Widget _buildStep2(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'ثانياً، تأكيد هويتك',
-          style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.w900, color: context.textPrimary),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.verified_user_rounded, color: context.accentColor, size: 22),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'توثيق الهوية الوطنية (KYC الإلزامي)',
+                    style: GoogleFonts.tajawal(fontSize: 18, fontWeight: FontWeight.w900, color: context.textPrimary),
+                  ),
+                  Text(
+                    'شرط أساسي لإنشاء الحساب وتوثيق العقود الإلكترونية',
+                    style: GoogleFonts.tajawal(fontSize: 12, color: context.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        Text(
-          'مطلوب لحماية حقوقك وتوثيق العقود',
-          style: GoogleFonts.tajawal(fontSize: 13, color: context.textSecondary),
-        ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
 
-        // Security notice
+        // Security assurance banner
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -441,58 +550,79 @@ class _RegisterScreenState extends State<RegisterScreen>
           ),
           child: Row(
             children: [
-              const Icon(Icons.shield_rounded, color: AppColors.success, size: 20),
+              const Icon(Icons.lock_outline_rounded, color: AppColors.success, size: 20),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'بياناتك الشخصية مشفرة بالكامل ومؤمنة بـ SHA-256. لن تُشارك مع أي طرف ثالث.',
-                  style: GoogleFonts.tajawal(fontSize: 12, color: context.textSecondary, height: 1.4),
+                  'بيانات الرقم القومي وصور الهوية يتم تشفيرها ببصمة SHA-256 لحماية حسابك ولن يتم استخدامها إلا في توليد عقود الإيجار الرسمية الموثقة.',
+                  style: GoogleFonts.tajawal(fontSize: 11.5, color: context.textSecondary, height: 1.4),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
         // National ID number
-        _sectionLabel('رقم البطاقة الوطنية (14 رقم)', isDark),
-        const SizedBox(height: 8),
+        _sectionLabel('الرقم القومي (14 رقم - إلزامي)', isDark),
+        const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
             color: isDark ? Colors.white.withValues(alpha: 0.04) : Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: context.borderColor),
+            border: Border.all(
+              color: _nationalIdCtl.text.length == 14 ? AppColors.success : context.borderColor,
+            ),
           ),
           child: TextField(
             controller: _nationalIdCtl,
             keyboardType: TextInputType.number,
             maxLength: 14,
-            style: GoogleFonts.tajawal(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1.5),
+            onChanged: (_) => setState(() {}),
+            style: GoogleFonts.tajawal(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 2),
             decoration: InputDecoration(
-              hintText: '••••••••••••••',
-              hintStyle: GoogleFonts.tajawal(color: context.textSecondary.withValues(alpha: 0.5)),
+              hintText: '29XXXXXXXXXXXX',
+              hintStyle: GoogleFonts.tajawal(color: context.textSecondary.withValues(alpha: 0.4), letterSpacing: 0, fontSize: 13),
               prefixIcon: Icon(Icons.credit_card_rounded, color: context.accentColor, size: 20),
+              suffixIcon: _nationalIdCtl.text.length == 14
+                  ? const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 20)
+                  : null,
               border: InputBorder.none,
               counterText: '',
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
-        // ID front photo
-        _sectionLabel('صورة وجه البطاقة', isDark),
-        const SizedBox(height: 8),
+        // ID Front Photo
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _sectionLabel('صورة وجه بطاقة الرقم القومي (إلزامي)', isDark),
+            if (_idFrontPath != null)
+              Text('تم الرفع ✓', style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.success)),
+          ],
+        ),
+        const SizedBox(height: 6),
         _idPhotoBox(true, isDark),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
 
-        // ID back photo
-        _sectionLabel('صورة ظهر البطاقة', isDark),
-        const SizedBox(height: 8),
+        // ID Back Photo
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _sectionLabel('صورة ظهر بطاقة الرقم القومي (إلزامي)', isDark),
+            if (_idBackPath != null)
+              Text('تم الرفع ✓', style: GoogleFonts.tajawal(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.success)),
+          ],
+        ),
+        const SizedBox(height: 6),
         _idPhotoBox(false, isDark),
         const SizedBox(height: 24),
 
-        _buildNextButton('التالي: مراجعة وتأكيد', Icons.arrow_forward_rounded, _nextStep),
+        _buildNextButton('التالي: مراجعة وتأكيد البيانات', Icons.arrow_forward_rounded, _nextStep),
+        const SizedBox(height: 16),
       ],
     );
   }
@@ -503,18 +633,17 @@ class _RegisterScreenState extends State<RegisterScreen>
       onTap: () => _pickIdImage(isFront),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        height: 130,
+        height: 135,
         decoration: BoxDecoration(
           color: path != null
-              ? AppColors.success.withValues(alpha: 0.05)
+              ? AppColors.success.withValues(alpha: 0.06)
               : isDark
                   ? Colors.white.withValues(alpha: 0.04)
                   : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: path != null ? AppColors.success.withValues(alpha: 0.5) : context.borderColor,
-            width: path != null ? 1.5 : 1,
-            style: path != null ? BorderStyle.solid : BorderStyle.solid,
+            color: path != null ? AppColors.success : context.borderColor,
+            width: path != null ? 1.8 : 1,
           ),
         ),
         child: path != null
@@ -528,7 +657,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                       top: 8,
                       right: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: AppColors.success,
                           borderRadius: BorderRadius.circular(20),
@@ -536,9 +665,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.check_rounded, color: Colors.white, size: 12),
+                            const Icon(Icons.check_rounded, color: Colors.white, size: 13),
                             const SizedBox(width: 4),
-                            Text('تم التقاطها', style: GoogleFonts.tajawal(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
+                            Text('تم التقاط الهوية', style: GoogleFonts.tajawal(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800)),
                           ],
                         ),
                       ),
@@ -546,16 +675,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                     Positioned(
                       bottom: 8,
                       right: 8,
-                      child: GestureDetector(
-                        onTap: () => _pickIdImage(isFront),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          shape: BoxShape.circle,
                         ),
+                        child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 16),
                       ),
                     ),
                   ],
@@ -565,18 +691,18 @@ class _RegisterScreenState extends State<RegisterScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    isFront ? Icons.credit_card_rounded : Icons.flip_rounded,
+                    isFront ? Icons.badge_outlined : Icons.flip_rounded,
                     color: context.accentColor,
-                    size: 32,
+                    size: 34,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isFront ? 'التقط صورة الوجه' : 'التقط صورة الظهر',
-                    style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w700, color: context.textPrimary),
+                    isFront ? 'التقط صورة واضحة لوجه البطاقة' : 'التقط صورة واضحة لظهر البطاقة',
+                    style: GoogleFonts.tajawal(fontSize: 13.5, fontWeight: FontWeight.w800, color: context.textPrimary),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
-                    'اضغط للكاميرا أو من المعرض',
+                    'اضغط لفتح الكاميرا والتقاط البطاقة',
                     style: GoogleFonts.tajawal(fontSize: 11, color: context.textSecondary),
                   ),
                 ],
@@ -585,49 +711,53 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
   }
 
-  /// Step 3: Confirm & Submit
+  /// Step 3: Review & Submit
   Widget _buildStep3(bool isDark, bool isLoading) {
+    final code = _inviteCodeCtl.text.trim().toUpperCase();
+    final isOwner = _selectedRole == 'owner';
+    final hasValidInvite = code.isNotEmpty && _validInviteCodes.contains(code);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'ثالثاً، مراجعة وتأكيد',
+          'ثالثاً، مراجعة وتأكيد الحساب',
           style: GoogleFonts.tajawal(fontSize: 20, fontWeight: FontWeight.w900, color: context.textPrimary),
         ),
         Text(
-          'راجع بياناتك قبل إنشاء الحساب',
+          'تأكد من صحة بياناتك قبل إتمام إنشاء الحساب',
           style: GoogleFonts.tajawal(fontSize: 13, color: context.textSecondary),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
-        // Summary card
+        // Summary Card
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkCard : Colors.white,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), blurRadius: 12)],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04), blurRadius: 12)],
           ),
           child: Column(
             children: [
-              _summaryRow(isDark, Icons.person_rounded, 'الاسم', _nameCtl.text, AppColors.gold),
+              _summaryRow(isDark, Icons.person_rounded, 'الاسم بالكامل', _nameCtl.text, context.accentColor),
               _divider(isDark),
               _summaryRow(isDark, Icons.email_rounded, 'البريد الإلكتروني', _emailCtl.text, AppColors.info),
               _divider(isDark),
               _summaryRow(isDark, Icons.phone_rounded, 'الهاتف', _phoneCtl.text, AppColors.success),
               _divider(isDark),
-              _summaryRow(isDark, Icons.credit_card_rounded, 'الرقم القومي', '••••••••${_nationalIdCtl.text.length > 4 ? _nationalIdCtl.text.substring(_nationalIdCtl.text.length - 4) : ''}', AppColors.gold),
+              _summaryRow(isDark, Icons.credit_card_rounded, 'الرقم القومي', '••••••••${_nationalIdCtl.text.substring(_nationalIdCtl.text.length - 4)}', context.accentColor),
               _divider(isDark),
               _summaryRow(
                 isDark,
-                _selectedRole == 'owner' ? Icons.home_work_rounded : Icons.key_rounded,
+                isOwner ? Icons.home_work_rounded : Icons.key_rounded,
                 'نوع الحساب',
-                _selectedRole == 'owner' ? 'مالك عقار' : 'مستأجر',
-                _selectedRole == 'owner' ? AppColors.gold : AppColors.info,
+                isOwner ? 'مالك عقار' : 'مستأجر',
+                isOwner ? const Color(0xFFF59E0B) : AppColors.info,
               ),
               _divider(isDark),
-              // ID verification status
+              // KYC Status
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
@@ -646,8 +776,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('تحقق الهوية', style: GoogleFonts.tajawal(fontSize: 11, color: context.textSecondary)),
-                          Text('تم التحقق ✓', style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.success)),
+                          Text('توثيق الهوية (KYC)', style: GoogleFonts.tajawal(fontSize: 11, color: context.textSecondary)),
+                          Text('مكتمل وموثق ✓', style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.success)),
                         ],
                       ),
                     ),
@@ -659,48 +789,57 @@ class _RegisterScreenState extends State<RegisterScreen>
         ),
         const SizedBox(height: 16),
 
-        // Owner pending message
-        if (_selectedRole == 'owner')
+        // Approval Notice for Owner
+        if (isOwner)
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.warning.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+              color: hasValidInvite
+                  ? AppColors.success.withValues(alpha: 0.1)
+                  : const Color(0xFFF59E0B).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: hasValidInvite
+                    ? AppColors.success.withValues(alpha: 0.4)
+                    : const Color(0xFFF59E0B).withValues(alpha: 0.4),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.hourglass_top_rounded, color: AppColors.warning, size: 18),
+                    Icon(
+                      hasValidInvite ? Icons.verified_rounded : Icons.hourglass_top_rounded,
+                      color: hasValidInvite ? AppColors.success : const Color(0xFFD97706),
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
-                    Text('حساب المالك يحتاج موافقة', style: GoogleFonts.tajawal(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.warning)),
+                    Expanded(
+                      child: Text(
+                        hasValidInvite ? 'كود دعوة معتمد - تفعيل فوري' : 'الحساب يتطلب اعتماد الإدارة',
+                        style: GoogleFonts.tajawal(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w900,
+                          color: hasValidInvite ? AppColors.success : const Color(0xFFD97706),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'بعد إنشاء الحساب، سيتم إرسال طلب مراجعة لفريق سكني. سيتواصلون معك خلال 24 ساعة للموافقة وتفعيل الحساب.',
-                  style: GoogleFonts.tajawal(fontSize: 12, color: context.textSecondary, height: 1.5),
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportChatScreen())),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.support_agent_rounded, color: AppColors.info, size: 16),
-                      const SizedBox(width: 6),
-                      Text('تحدث مع الدعم الآن', style: GoogleFonts.tajawal(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.info)),
-                      const Icon(Icons.open_in_new_rounded, color: AppColors.info, size: 13),
-                    ],
-                  ),
+                  hasValidInvite
+                      ? 'تم التحقق من كود الدعوة المعتمد ($code). سيتم تفعيل حساب المالك فوراً.'
+                      : 'سيتم تقديم طلب الحساب للمراجعة من قِبل إدارة سكني. لن يتمكن الحساب من الوصول للداشبورد حتى يتم الاعتماد أو إدخال كود دعوة.',
+                  style: GoogleFonts.tajawal(fontSize: 12, color: context.textSecondary, height: 1.4),
                 ),
               ],
             ),
           ),
         const SizedBox(height: 16),
 
-        // Terms
+        // Terms Agreement
         GestureDetector(
           onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
           child: Row(
@@ -727,7 +866,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         text: 'الشروط والأحكام',
                         style: TextStyle(color: context.accentColor, fontWeight: FontWeight.w800),
                       ),
-                      const TextSpan(text: ' وسياسة الخصوصية'),
+                      const TextSpan(text: ' وسياسة توثيق العقود وحماية الخصوصية'),
                     ],
                   ),
                 ),
@@ -737,7 +876,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         ),
         const SizedBox(height: 20),
 
-        // Submit
+        // Submit Button
         SizedBox(
           width: double.infinity,
           height: 54,
@@ -761,8 +900,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                       const Icon(Icons.rocket_launch_rounded, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'إنشاء الحساب الآن',
-                        style: GoogleFonts.tajawal(fontSize: 16, fontWeight: FontWeight.w900),
+                        isOwner && !hasValidInvite ? 'إرسال طلب الحساب للاعتماد' : 'إنشاء وتفعيل الحساب الآن',
+                        style: GoogleFonts.tajawal(fontSize: 15.5, fontWeight: FontWeight.w900),
                       ),
                     ],
                   ),
@@ -779,8 +918,8 @@ class _RegisterScreenState extends State<RegisterScreen>
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
@@ -793,7 +932,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: GoogleFonts.tajawal(fontSize: 11, color: context.textSecondary)),
-                Text(value, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w700, color: context.textPrimary)),
+                Text(value, style: GoogleFonts.tajawal(fontSize: 13, fontWeight: FontWeight.w800, color: context.textPrimary)),
               ],
             ),
           ),
@@ -832,7 +971,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? context.accentColor : context.borderColor,
-            width: isSelected ? 1.6 : 1,
+            width: isSelected ? 1.8 : 1,
           ),
           boxShadow: isSelected
               ? [BoxShadow(color: context.accentColor.withValues(alpha: 0.2), blurRadius: 10)]
@@ -870,20 +1009,35 @@ class _RegisterScreenState extends State<RegisterScreen>
         children: [
           _sectionLabel('الاسم بالكامل', isDark),
           const SizedBox(height: 6),
-          _inputField(controller: _nameCtl, hint: 'محمد أحمد', icon: Icons.person_rounded, isDark: isDark,
-            validator: (v) => (v != null && v.trim().length >= 3) ? null : 'اسم لا يقل عن 3 أحرف'),
+          _inputField(
+            controller: _nameCtl,
+            hint: 'مثال: محمد أحمد',
+            icon: Icons.person_rounded,
+            isDark: isDark,
+            validator: (v) => (v != null && v.trim().length >= 3) ? null : 'يرجى إدخال اسم لا يقل عن 3 أحرف',
+          ),
           const SizedBox(height: 14),
           _sectionLabel('البريد الإلكتروني', isDark),
           const SizedBox(height: 6),
-          _inputField(controller: _emailCtl, hint: 'example@email.com', icon: Icons.alternate_email_rounded, isDark: isDark,
+          _inputField(
+            controller: _emailCtl,
+            hint: 'example@email.com',
+            icon: Icons.alternate_email_rounded,
+            isDark: isDark,
             type: TextInputType.emailAddress,
-            validator: (v) => (v != null && v.contains('@')) ? null : 'بريد إلكتروني غير صالح'),
+            validator: (v) => (v != null && v.contains('@') && v.contains('.')) ? null : 'يرجى إدخال بريد إلكتروني صحيح',
+          ),
           const SizedBox(height: 14),
-          _sectionLabel('رقم الهاتف', isDark),
+          _sectionLabel('رقم الهاتف المحمول', isDark),
           const SizedBox(height: 6),
-          _inputField(controller: _phoneCtl, hint: '01XXXXXXXXX', icon: Icons.phone_android_rounded, isDark: isDark,
+          _inputField(
+            controller: _phoneCtl,
+            hint: '01XXXXXXXXX',
+            icon: Icons.phone_android_rounded,
+            isDark: isDark,
             type: TextInputType.phone,
-            validator: (v) => (v != null && v.trim().length >= 10) ? null : 'رقم هاتف غير صالح'),
+            validator: (v) => (v != null && RegExp(r'^01[0125]\d{8}$').hasMatch(v.trim())) ? null : 'يرجى إدخال رقم هاتف مصري صحيح (11 رقم)',
+          ),
           const SizedBox(height: 14),
           _sectionLabel('كلمة المرور', isDark),
           const SizedBox(height: 6),
@@ -894,11 +1048,14 @@ class _RegisterScreenState extends State<RegisterScreen>
             isDark: isDark,
             obscure: _obscurePassword,
             suffixIcon: IconButton(
-              icon: Icon(_obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                color: context.textSecondary, size: 19),
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                color: context.textSecondary,
+                size: 19,
+              ),
               onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
             ),
-            validator: (v) => (v != null && v.length >= 6) ? null : 'كلمة المرور لا تقل عن 6 أحرف',
+            validator: (v) => (v != null && v.length >= 6) ? null : 'كلمة المرور يجب أن لا تقل عن 6 أحرف',
           ),
         ],
       ),
@@ -936,7 +1093,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         style: GoogleFonts.tajawal(color: context.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.tajawal(color: context.textSecondary.withValues(alpha: 0.5), fontSize: 13),
+          hintStyle: GoogleFonts.tajawal(color: context.textSecondary.withValues(alpha: 0.4), fontSize: 13),
           prefixIcon: Icon(icon, color: context.accentColor, size: 20),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
@@ -948,77 +1105,5 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   Widget _divider(bool isDark) {
     return Divider(color: isDark ? AppColors.darkBorder : AppColors.lightBorder, height: 1);
-  }
-
-  void _showOwnerPendingDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: context.isDark ? AppColors.darkCard : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Column(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.hourglass_top_rounded, color: AppColors.warning, size: 32),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'طلبك قيد المراجعة',
-              style: GoogleFonts.tajawal(fontWeight: FontWeight.w900, color: context.textPrimary, fontSize: 18),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'تم استلام طلب تسجيل حساب المالك الخاص بك. سيقوم فريق سكني بمراجعة بياناتك وتفعيل الحساب خلال 24 ساعة.',
-              style: GoogleFonts.tajawal(fontSize: 13, color: context.textSecondary, height: 1.6),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 14),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportChatScreen()));
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.info.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.support_agent_rounded, color: AppColors.info, size: 18),
-                    const SizedBox(width: 8),
-                    Text('تحدث مع الدعم', style: GoogleFonts.tajawal(color: AppColors.info, fontWeight: FontWeight.w800)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pushNamedAndRemoveUntil(context, '/home', (_) => false);
-            },
-            child: Text('حسناً، فهمت', style: GoogleFonts.tajawal(color: context.accentColor, fontWeight: FontWeight.w800)),
-          ),
-        ],
-      ),
-    );
   }
 }

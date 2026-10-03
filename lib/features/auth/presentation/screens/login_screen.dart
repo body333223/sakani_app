@@ -111,7 +111,15 @@ class _LoginScreenState extends State<LoginScreen> {
               message: 'مرحباً بك، ${state.user.name.isNotEmpty ? state.user.name : "في سكني"}',
               type: ToastType.success,
             );
-            Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            if (state.user.isOwner) {
+              if (state.user.isOwnerPendingApproval) {
+                Navigator.pushNamedAndRemoveUntil(context, '/owner-pending', (route) => false);
+              } else {
+                Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);
+              }
+            } else {
+              Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+            }
           } else if (state is AuthError) {
             AppSnackbar.show(
               context,

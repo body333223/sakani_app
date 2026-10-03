@@ -22,6 +22,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:sakani/core/services/push_notification_service.dart';
 import 'package:sakani/features/contracts/data/services/contract_service.dart';
 import 'package:sakani/features/contracts/presentation/screens/digital_contract_screen.dart';
+import 'package:sakani/features/auth/presentation/screens/owner_pending_approval_screen.dart';
 
 class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
@@ -200,6 +201,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthCubit>().currentUser;
+    if (user != null && user.isOwnerPendingApproval) {
+      return const OwnerPendingApprovalScreen();
+    }
+
     final lang = context.watch<LocaleProvider>().lang;
     final tr = AppLocalizations(lang);
     final isAr = lang == 'ar';

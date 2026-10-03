@@ -61,6 +61,11 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phone,
     required String role,
     String? photoUrl,
+    String? nationalId,
+    String? idFrontPath,
+    String? idBackPath,
+    String? inviteCode,
+    bool? isApproved,
   }) async {
     try {
       final user = await remoteDataSource.registerWithEmail(
@@ -70,6 +75,11 @@ class AuthRepositoryImpl implements AuthRepository {
         phone: phone,
         role: role,
         photoUrl: photoUrl,
+        nationalId: nationalId,
+        idFrontPath: idFrontPath,
+        idBackPath: idBackPath,
+        inviteCode: inviteCode,
+        isApproved: isApproved,
       );
       _persist(user);
       return Success(user);

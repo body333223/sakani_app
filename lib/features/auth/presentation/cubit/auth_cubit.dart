@@ -66,6 +66,11 @@ class AuthCubit extends Cubit<AuthState> {
     required String phone,
     required String role,
     String? photoUrl,
+    String? nationalId,
+    String? idFrontPath,
+    String? idBackPath,
+    String? inviteCode,
+    bool? isApproved,
   }) async {
     emit(const AuthLoading());
     final result = await registerUseCase(RegisterParams(
@@ -75,6 +80,11 @@ class AuthCubit extends Cubit<AuthState> {
       phone: phone,
       role: role,
       photoUrl: photoUrl,
+      nationalId: nationalId,
+      idFrontPath: idFrontPath,
+      idBackPath: idBackPath,
+      inviteCode: inviteCode,
+      isApproved: isApproved,
     ));
 
     result.fold(
